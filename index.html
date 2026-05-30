@@ -11,197 +11,140 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-
     html, body {
       width: 100%; height: 100%;
       overflow: hidden;
-      background: linear-gradient(180deg, #87CEEB 0%, #B0E0FF 50%, #C8F0FF 100%);
-      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+      background: #87CEEB;
+      font-family: Arial, sans-serif;
     }
-
     #game-container {
       position: relative;
       width: 100%; height: 100%;
       overflow: hidden;
-    }
-
-    /* 雲 */
-    .cloud {
-      position: absolute;
-      background: white;
-      border-radius: 50px;
-      opacity: 0.7;
-      animation: driftCloud linear infinite;
-    }
-    .cloud::before, .cloud::after {
-      content: ''; position: absolute;
-      background: white; border-radius: 50%;
-    }
-    .cloud::before { width:60%; height:180%; top:-70%; left:15%; }
-    .cloud::after  { width:40%; height:140%; top:-55%; right:15%; }
-    @keyframes driftCloud {
-      from { transform: translateX(-250px); }
-      to   { transform: translateX(calc(100vw + 250px)); }
+      background: linear-gradient(180deg, #87CEEB 0%, #C8F0FF 100%);
     }
 
     /* HUD */
     #hud {
-      position: absolute; top:0; left:0; right:0; z-index:100;
+      position: absolute; top: 0; left: 0; right: 0;
+      z-index: 100;
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 16px;
-      background: rgba(255,255,255,0.4);
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.6);
     }
-    #score-box, #timer-box {
-      background: white; border-radius: 20px;
-      padding: 6px 18px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-      text-align: center; min-width: 90px;
+    .hud-box {
+      background: white; border-radius: 16px;
+      padding: 4px 14px; text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      min-width: 80px;
     }
-    .hud-label { font-size:11px; color:#888; font-weight:bold; letter-spacing:1px; }
-    #score { font-size:28px; font-weight:bold; color:#FF6B6B; line-height:1.1; }
-    #timer { font-size:28px; font-weight:bold; color:#4ECDC4; line-height:1.1; }
-    #timer.urgent { color:#FF3B3B; animation: pulse 0.5s infinite alternate; }
-    @keyframes pulse { from{transform:scale(1)} to{transform:scale(1.2)} }
-
+    .hud-label { font-size: 10px; color: #999; font-weight: bold; }
+    #score { font-size: 26px; font-weight: bold; color: #FF5555; }
+    #timer { font-size: 26px; font-weight: bold; color: #44BBAA; }
+    #timer.urgent { color: #FF0000; }
     #level-badge {
-      background: linear-gradient(135deg,#FFD700,#FFA500);
-      color:white; border-radius:50%;
-      width:48px; height:48px;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      box-shadow:0 3px 8px rgba(0,0,0,0.2);
-      font-weight:bold;
+      background: #FFD700; color: white;
+      border-radius: 50%; width: 44px; height: 44px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
-    #level-num { font-size:18px; line-height:1; }
+    #level-num { font-size: 16px; line-height: 1; }
 
     /* 動物カード */
     .animal-card {
       position: absolute;
-      top: 100%;          /* 画面下からスタート */
-      border-radius: 20px;
-      cursor: pointer;
+      top: 100%;
+      border-radius: 16px;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       background: white;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-      padding: 6px 4px 4px; gap: 2px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      padding: 4px;
+      cursor: pointer;
+      touch-action: manipulation;
       animation: jumpIn ease-out forwards;
-      will-change: transform;
     }
-    .animal-card:active { transform: scale(0.88) !important; }
-    .animal-emoji { line-height:1; }
-    .animal-name  { font-weight:bold; color:#555; white-space:nowrap; }
+    .animal-emoji { line-height: 1; }
+    .animal-name  { font-size: 11px; font-weight: bold; color: #555; }
 
     @keyframes jumpIn {
-      0%   { transform: translateY(0)      scale(0.5) rotate(-8deg); opacity:0; }
-      10%  { transform: translateY(-28vh)  scale(1.12) rotate(5deg); opacity:1; }
-      18%  { transform: translateY(-24vh)  scale(0.95) rotate(-3deg); }
-      25%  { transform: translateY(-27vh)  scale(1.03) rotate(1deg); }
-      32%  { transform: translateY(-27vh)  scale(1)    rotate(0deg); }
-      85%  { transform: translateY(-118vh) scale(1); opacity:1; }
-      100% { transform: translateY(-125vh) scale(1); opacity:0; }
+      0%   { transform: translateY(0) scale(0.4); opacity: 0; }
+      12%  { transform: translateY(-30vh) scale(1.1); opacity: 1; }
+      20%  { transform: translateY(-26vh) scale(0.96); }
+      28%  { transform: translateY(-30vh) scale(1); }
+      85%  { transform: translateY(-120vh) scale(1); opacity: 1; }
+      100% { transform: translateY(-128vh) scale(1); opacity: 0; }
     }
 
-    /* タップエフェクト */
-    .animal-tap-effect {
-      position:absolute; pointer-events:none; z-index:200;
-      animation: tapBurst 0.55s ease-out forwards;
+    /* エフェクト */
+    .pop-star {
+      position: absolute; pointer-events: none;
+      z-index: 200; font-size: 20px;
+      animation: starFly 0.7s ease-out forwards;
     }
-    @keyframes tapBurst {
-      0%   { transform: scale(0.6); opacity:1; }
-      50%  { transform: scale(1.7); opacity:1; }
-      100% { transform: scale(2.2); opacity:0; }
-    }
-    .heart-particle {
-      position:absolute; pointer-events:none; z-index:200; font-size:22px;
-      animation: heartFly 0.7s ease-out forwards;
-    }
-    @keyframes heartFly {
-      0%   { transform: translate(0,0) scale(0.5); opacity:1; }
-      100% { transform: translate(var(--dx),var(--dy)) scale(1.2); opacity:0; }
+    @keyframes starFly {
+      0%   { transform: translate(0,0) scale(0.5); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
     }
     .score-pop {
-      position:absolute; pointer-events:none; font-size:22px;
-      font-weight:bold; color:#FF6B6B;
-      text-shadow:0 2px 4px rgba(0,0,0,0.3); z-index:201;
-      animation: scoreFly 0.9s ease-out forwards;
+      position: absolute; pointer-events: none;
+      font-size: 20px; font-weight: bold;
+      color: #FF5555; z-index: 201;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      animation: scoreFly 0.8s ease-out forwards;
     }
     @keyframes scoreFly {
-      0%   { transform: translateY(0) scale(1); opacity:1; }
-      100% { transform: translateY(-65px) scale(1.3); opacity:0; }
+      0%   { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-60px); opacity: 0; }
     }
-
-    /* コンボ */
-    #combo-display {
-      position:absolute; top:80px; left:50%;
+    #combo-text {
+      position: absolute; top: 72px; left: 50%;
       transform: translateX(-50%);
-      z-index:150; font-size:28px; font-weight:bold;
-      color:#FF6B6B; text-shadow:0 2px 8px rgba(0,0,0,0.2);
-      pointer-events:none; opacity:0;
-      transition: opacity 0.3s; white-space:nowrap;
+      z-index: 150; font-size: 24px; font-weight: bold;
+      color: #FF5555; text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+      pointer-events: none;
+      display: none; white-space: nowrap;
     }
-    #combo-display.show { opacity:1; }
 
-    /* スタート / ゲームオーバー */
-    #start-screen, #gameover-screen {
-      position:absolute; inset:0; z-index:300;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      background: rgba(135,206,235,0.88);
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-    }
-    .screen-card {
-      background:white; border-radius:30px;
-      padding:36px 32px; text-align:center;
-      box-shadow:0 10px 40px rgba(0,0,0,0.15);
-      max-width:320px; width:88%;
-    }
-    .screen-title    { font-size:40px; margin-bottom:8px; }
-    .screen-subtitle { font-size:16px; color:#888; margin-bottom:16px; }
-    .big-btn {
-      display:block; width:100%; padding:18px;
-      border:none; border-radius:20px;
-      font-size:22px; font-family:inherit; font-weight:bold;
-      cursor:pointer; margin-top:12px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.15);
-      -webkit-appearance: none;
-    }
-    .big-btn:active { opacity:0.85; }
-    .btn-start { background:linear-gradient(135deg,#FF6B6B,#FF8E53); color:white; }
-    .btn-retry { background:linear-gradient(135deg,#4ECDC4,#44A9A2); color:white; }
-    .btn-home  { background:linear-gradient(135deg,#FF6B6B,#FF8E53); color:white; }
-    .result-score { font-size:56px; font-weight:bold; color:#FF6B6B; line-height:1; }
-    .result-label { font-size:14px; color:#aaa; margin-bottom:4px; }
-    .result-best  { font-size:18px; color:#FFD700; margin:8px 0 0; }
-    .medal { font-size:48px; margin:8px 0; }
-    .instructions { font-size:14px; color:#666; line-height:1.8; margin:10px 0 18px; }
-
-    /* 草地 */
+    /* 草 */
     #grass {
-      position:absolute; bottom:0; left:0; right:0;
-      height:60px;
-      background:linear-gradient(180deg,#7EC850 0%,#5BA032 100%);
-      border-radius:50% 50% 0 0 / 20px 20px 0 0;
-      z-index:50;
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 55px;
+      background: linear-gradient(#7EC850, #5BA032);
+      z-index: 50;
     }
-    #grass::before {
-      content:''; position:absolute;
-      top:-15px; left:0; right:0; height:30px;
-      background:
-        radial-gradient(ellipse 20px 15px at 10%  100%,#7EC850 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 20%  100%,#8ED860 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 30%  100%,#7EC850 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 40%  100%,#9AE870 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 50%  100%,#7EC850 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 60%  100%,#8ED860 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 70%  100%,#7EC850 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 80%  100%,#9AE870 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 90%  100%,#7EC850 50%,transparent 51%),
-        radial-gradient(ellipse 20px 15px at 100% 100%,#8ED860 50%,transparent 51%);
+
+    /* オーバーレイ画面 */
+    .overlay {
+      position: absolute; inset: 0; z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(100,180,230,0.92);
     }
+    .card {
+      background: white; border-radius: 24px;
+      padding: 30px 28px; text-align: center;
+      width: 88%; max-width: 310px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .card-title { font-size: 36px; margin-bottom: 6px; }
+    .card-sub   { font-size: 15px; color: #888; margin-bottom: 12px; }
+    .card-info  { font-size: 13px; color: #666; line-height: 1.9; margin-bottom: 18px; }
+    .btn {
+      display: block; width: 100%;
+      padding: 16px; margin-top: 10px;
+      border: none; border-radius: 16px;
+      font-size: 20px; font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .btn-orange { background: #FF6B3B; color: white; }
+    .btn-teal   { background: #3BBFB0; color: white; }
+    .result-pts { font-size: 52px; font-weight: bold; color: #FF5555; }
+    .result-sub { font-size: 13px; color: #aaa; margin-top: 4px; }
+    .medal      { font-size: 44px; margin: 6px 0; }
   </style>
 </head>
 <body>
@@ -209,56 +152,58 @@
   <div id="grass"></div>
 
   <div id="hud">
-    <div id="score-box">
+    <div class="hud-box">
       <div class="hud-label">スコア</div>
       <div id="score">0</div>
     </div>
     <div id="level-badge">
-      <div style="font-size:9px">Lv</div>
+      <div style="font-size:8px">Lv</div>
       <div id="level-num">1</div>
     </div>
-    <div id="timer-box">
+    <div class="hud-box">
       <div class="hud-label">のこり</div>
       <div id="timer">60</div>
     </div>
   </div>
 
-  <div id="combo-display"></div>
+  <div id="combo-text"></div>
 
-  <div id="start-screen">
-    <div class="screen-card">
-      <div class="screen-title">🐾 どうぶつタッチ！</div>
-      <div class="screen-subtitle">でてきた どうぶつをタッチ！</div>
-      <div class="instructions">
-        🐶 どうぶつがとびだしてくる！<br>
+  <!-- スタート -->
+  <div class="overlay" id="start-screen">
+    <div class="card">
+      <div class="card-title">🐾 どうぶつタッチ！</div>
+      <div class="card-sub">でてきた どうぶつを タッチ！</div>
+      <div class="card-info">
+        🐶 どうぶつが とびだすよ！<br>
         ⭐ ちいさいほど こうとく！<br>
-        ✨ つづけてタッチで ボーナス！<br>
-        ⏰ 60びょうチャレンジ！
+        ✨ つづけると ボーナス！<br>
+        ⏰ 60びょうで がんばろう！
       </div>
-      <button class="big-btn btn-start" id="btn-start">あそぶ！🎉</button>
+      <button class="btn btn-orange" id="btn-start">▶ あそぶ！</button>
     </div>
   </div>
 
-  <div id="gameover-screen" style="display:none">
-    <div class="screen-card">
-      <div class="medal" id="result-medal">🥇</div>
-      <div class="result-label">スコア</div>
-      <div class="result-score" id="result-score">0</div>
-      <div class="result-best" id="result-best"></div>
-      <button class="big-btn btn-retry" id="btn-retry">もう一度！🔄</button>
-      <button class="big-btn btn-home" id="btn-home" style="margin-top:8px">タイトルへ 🏠</button>
+  <!-- ゲームオーバー -->
+  <div class="overlay" id="end-screen" style="display:none">
+    <div class="card">
+      <div class="medal" id="end-medal">🥇</div>
+      <div class="result-pts" id="end-score">0</div>
+      <div class="result-sub" id="end-best">ベスト: 0</div>
+      <button class="btn btn-teal" id="btn-retry">🔄 もう一度！</button>
+      <button class="btn btn-orange" id="btn-home" style="margin-top:8px">🏠 タイトルへ</button>
     </div>
   </div>
 </div>
 
 <script>
+// ── 定数 ──────────────────────────────────────────
 var GAME_TIME = 60;
 var ANIMALS = [
   '🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁',
   '🐮','🐷','🐸','🐵','🐔','🐧','🦆','🦋','🐢','🐬',
   '🦓','🦒','🐘','🦜','🦔','🐇','🦉','🐺','🐴','🦕'
 ];
-var ANIMAL_NAMES = {
+var NAMES = {
   '🐶':'いぬ','🐱':'ねこ','🐭':'ねずみ','🐰':'うさぎ','🦊':'きつね',
   '🐻':'くま','🐼':'パンダ','🐨':'コアラ','🐯':'とら','🦁':'らいおん',
   '🐮':'うし','🐷':'ぶた','🐸':'かえる','🐵':'さる','🐔':'にわとり',
@@ -266,284 +211,206 @@ var ANIMAL_NAMES = {
   '🦓':'しまうま','🦒':'きりん','🐘':'ぞう','🦜':'おうむ','🦔':'ハリネズミ',
   '🐇':'うさぎ','🦉':'ふくろう','🐺':'おおかみ','🐴':'うま','🦕':'きょうりゅう'
 };
-var BORDER_COLORS = [
-  '#FF6B6B','#FFD700','#4ECDC4','#FF9F7F',
-  '#C77DFF','#5BC8F5','#FF85A2','#7EC850'
-];
-var HEARTS = ['❤️','🧡','💛','💚','💙','💜','⭐','✨'];
+var BORDERS = ['#FF6B6B','#FFD700','#4ECDC4','#FF9F7F','#C77DFF','#5BC8F5','#FF85A2','#7EC850'];
+var STARS   = ['⭐','✨','💛','💚','💙','🧡','❤️','💜'];
 
+// ── 状態 ──────────────────────────────────────────
 var score = 0, timeLeft = GAME_TIME, level = 1;
-var timerInterval = null, spawnTimeout = null;
 var combo = 0, comboTimer = null;
-var bestScore = 0;
+var timerInt = null, spawnTO = null;
 var running = false;
+var bestScore = 0;
+try { bestScore = parseInt(localStorage.getItem('ab2') || '0') || 0; } catch(e){}
 
-try { bestScore = parseInt(localStorage.getItem('animalBest') || '0') || 0; } catch(e){}
-
-// ── サウンド ──────────────────────────────────────
-var audioCtx = null;
-function getAudio() {
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
-  }
-  return audioCtx;
-}
-function playTone(freq, dur, type) {
+// ── オーディオ ────────────────────────────────────
+var actx = null;
+function beep(freq, dur) {
   try {
-    var ctx = getAudio(); if (!ctx) return;
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = type || 'sine';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freq * 2, ctx.currentTime + 0.06);
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + dur);
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.2, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+    o.start(); o.stop(actx.currentTime + dur);
   } catch(e) {}
-}
-function playTap()  { playTone(440 + combo * 30, 0.2); }
-function playComboSound() {
-  [523,659,784,1047].forEach(function(f,i) { playTone(f, 0.15, 'triangle'); });
-}
-function playGameOver() {
-  [523,415,330,262].forEach(function(f,i) { playTone(f, 0.3, 'sawtooth'); });
-}
-
-// ── 雲 ───────────────────────────────────────────
-function makeClouds() {
-  var container = document.getElementById('game-container');
-  for (var i = 0; i < 4; i++) {
-    var c = document.createElement('div');
-    c.className = 'cloud';
-    var w = 80 + Math.random() * 80;
-    c.style.width = w + 'px';
-    c.style.height = (w * 0.35) + 'px';
-    c.style.top = (10 + Math.random() * 30) + '%';
-    c.style.left = (-w - 20) + 'px';
-    c.style.animationDuration = (20 + Math.random() * 20) + 's';
-    c.style.animationDelay = (-Math.random() * 20) + 's';
-    container.appendChild(c);
-  }
 }
 
 // ── ゲーム制御 ────────────────────────────────────
 function startGame() {
-  score = 0; timeLeft = GAME_TIME; level = 1; combo = 0;
-  running = true;
-
-  document.getElementById('score').textContent = '0';
-  document.getElementById('timer').textContent = GAME_TIME;
-  document.getElementById('timer').className = '';
-  document.getElementById('level-num').textContent = '1';
-  document.getElementById('combo-display').className = '';
-  document.getElementById('start-screen').style.display = 'none';
-  document.getElementById('gameover-screen').style.display = 'none';
-
-  var old = document.querySelectorAll('.animal-card');
-  for (var i = 0; i < old.length; i++) old[i].remove();
-
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimeout);
-
-  timerInterval = setInterval(tickTimer, 1000);
-  scheduleSpawn();
+  score = 0; timeLeft = GAME_TIME; level = 1; combo = 0; running = true;
+  setText('score', '0');
+  setText('timer', '' + GAME_TIME);
+  byId('timer').className = '';
+  setText('level-num', '1');
+  byId('combo-text').style.display = 'none';
+  byId('start-screen').style.display = 'none';
+  byId('end-screen').style.display = 'none';
+  removeCards();
+  clearInterval(timerInt);
+  clearTimeout(spawnTO);
+  timerInt = setInterval(tick, 1000);
+  spawn();
 }
 
-function showStart() {
+function showTitle() {
   running = false;
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimeout);
-  var old = document.querySelectorAll('.animal-card');
-  for (var i = 0; i < old.length; i++) old[i].remove();
-  document.getElementById('gameover-screen').style.display = 'none';
-  document.getElementById('start-screen').style.display = 'flex';
+  clearInterval(timerInt); clearTimeout(spawnTO);
+  removeCards();
+  byId('end-screen').style.display = 'none';
+  byId('start-screen').style.display = 'flex';
 }
 
-function tickTimer() {
+function removeCards() {
+  var cs = document.querySelectorAll('.animal-card');
+  for (var i = 0; i < cs.length; i++) cs[i].remove();
+}
+
+function tick() {
   timeLeft--;
-  var el = document.getElementById('timer');
-  el.textContent = timeLeft;
-  if (timeLeft <= 10) el.className = 'urgent';
+  setText('timer', '' + timeLeft);
+  if (timeLeft <= 10) byId('timer').className = 'urgent';
   level = Math.min(5, Math.floor((GAME_TIME - timeLeft) / 15) + 1);
-  document.getElementById('level-num').textContent = level;
+  setText('level-num', '' + level);
   if (timeLeft <= 0) endGame();
 }
 
+function endGame() {
+  running = false;
+  clearInterval(timerInt); clearTimeout(spawnTO);
+  beep(300, 0.4);
+  var isNew = score > bestScore;
+  if (isNew) { bestScore = score; try { localStorage.setItem('ab2', bestScore); } catch(e){} }
+  setText('end-score', '' + score);
+  setText('end-best',  isNew ? '🎊 新記録！' : 'ベスト: ' + bestScore);
+  setText('end-medal', score >= 300 ? '🥇' : score >= 150 ? '🥈' : score >= 50 ? '🥉' : '🎮');
+  setTimeout(function() { byId('end-screen').style.display = 'flex'; }, 500);
+}
+
 // ── スポーン ──────────────────────────────────────
-function scheduleSpawn() {
-  spawnAnimal();
-  var delay = Math.max(400, 1200 - level * 150) + Math.random() * 300;
-  spawnTimeout = setTimeout(function() {
-    if (running) scheduleSpawn();
-  }, delay);
+function spawn() {
+  if (!running) return;
+  spawnCard();
+  var d = Math.max(400, 1200 - level * 140) + Math.random() * 300;
+  spawnTO = setTimeout(function() { if (running) spawn(); }, d);
+}
+
+function spawnCard() {
+  if (!running) return;
+  var sz = pickSize();
+  var emoji = ANIMALS[rnd(ANIMALS.length)];
+  var name  = NAMES[emoji] || '';
+  var bdr   = BORDERS[rnd(BORDERS.length)];
+  var dur   = Math.max(2.5, 6 - level * 0.5) + Math.random() * 2;
+
+  var card = document.createElement('div');
+  card.className = 'animal-card';
+  card.style.width  = sz + 'px';
+  card.style.height = sz + 'px';
+  card.style.left   = (4 + Math.random() * 80) + '%';
+  card.style.border = '3px solid ' + bdr;
+  card.style.animationDuration = dur.toFixed(2) + 's';
+
+  var ee = document.createElement('div');
+  ee.className = 'animal-emoji';
+  ee.style.fontSize = Math.round(sz * 0.5) + 'px';
+  ee.textContent = emoji;
+
+  var ne = document.createElement('div');
+  ne.className = 'animal-name';
+  ne.textContent = name;
+
+  card.appendChild(ee);
+  card.appendChild(ne);
+  card.dataset.pts   = sizeToPoints(sz);
+  card.dataset.emoji = emoji;
+
+  card.addEventListener('pointerdown', tapCard);
+  card.addEventListener('animationend', function() {
+    if (card.parentNode) card.parentNode.removeChild(card);
+  });
+
+  byId('game-container').appendChild(card);
 }
 
 function pickSize() {
   var r = Math.random();
-  if (r < 0.15) return 100 + Math.floor(Math.random() * 20);
-  if (r < 0.55) return 70  + Math.floor(Math.random() * 20);
-  return 48 + Math.floor(Math.random() * 14);
+  return r < 0.15 ? 95 + rnd(20) : r < 0.55 ? 65 + rnd(20) : 46 + rnd(14);
 }
-
-function sizeToPoints(s) {
-  return s >= 100 ? 1 : s >= 70 ? 3 : 5;
-}
-
-function spawnAnimal() {
-  if (!running) return;
-  var container = document.getElementById('game-container');
-  var size = pickSize();
-  var emoji = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-  var name  = ANIMAL_NAMES[emoji] || '';
-  var border = BORDER_COLORS[Math.floor(Math.random() * BORDER_COLORS.length)];
-  var dur  = Math.max(2.5, 6 - level * 0.5) + Math.random() * 2;
-  var left = 4 + Math.random() * 80;
-
-  var card = document.createElement('div');
-  card.className = 'animal-card';
-  card.style.width  = size + 'px';
-  card.style.height = size + 'px';
-  card.style.left   = left + '%';
-  card.style.border = '4px solid ' + border;
-  card.style.animationDuration = dur + 's';
-  card.dataset.points = sizeToPoints(size);
-  card.dataset.emoji  = emoji;
-
-  var eEl = document.createElement('div');
-  eEl.className = 'animal-emoji';
-  eEl.style.fontSize = Math.round(size * 0.52) + 'px';
-  eEl.textContent = emoji;
-
-  var nEl = document.createElement('div');
-  nEl.className = 'animal-name';
-  nEl.style.fontSize = Math.max(10, Math.round(size * 0.15)) + 'px';
-  nEl.textContent = name;
-
-  card.appendChild(eEl);
-  card.appendChild(nEl);
-
-  card.addEventListener('pointerdown', onAnimalTap);
-  card.addEventListener('animationend', function() {
-    card.remove();
-    if (running && combo > 0) { combo = 0; showCombo(0); }
-  });
-
-  container.appendChild(card);
-}
+function sizeToPoints(s) { return s >= 95 ? 1 : s >= 65 ? 3 : 5; }
 
 // ── タップ ────────────────────────────────────────
-function onAnimalTap(e) {
+function tapCard(e) {
   e.stopPropagation();
   if (!running) return;
-  var card = e.currentTarget;
+  var card = this;
+  card.removeEventListener('pointerdown', tapCard);
   var rect = card.getBoundingClientRect();
   var cx = rect.left + rect.width / 2;
   var cy = rect.top  + rect.height / 2;
-
-  card.removeEventListener('pointerdown', onAnimalTap);
-  card.remove();
+  if (card.parentNode) card.parentNode.removeChild(card);
 
   combo++;
   clearTimeout(comboTimer);
-  comboTimer = setTimeout(function() { combo = 0; showCombo(0); }, 1200);
+  comboTimer = setTimeout(function() { combo = 0; hideCombo(); }, 1200);
 
   var mult = combo >= 5 ? 3 : combo >= 3 ? 2 : 1;
-  var pts  = parseInt(card.dataset.points) * mult;
+  var pts  = parseInt(card.dataset.pts) * mult;
   score += pts;
-  document.getElementById('score').textContent = score;
+  setText('score', '' + score);
 
-  showTapEffect(cx, cy, card.dataset.emoji);
-  spawnHearts(cx, cy);
-  showScorePop(cx, cy, pts, combo);
-  playTap();
+  showStars(cx, cy);
+  showPts(cx, cy, pts, combo);
+  beep(440 + combo * 40, 0.18);
 
   if (combo >= 3) {
-    showCombo(combo);
-    if (combo % 3 === 0) playComboSound();
+    var ct = byId('combo-text');
+    ct.textContent = combo >= 10 ? '🔥' + combo + 'コンボ！！' : combo >= 5 ? '✨' + combo + 'コンボ！' : combo + 'コンボ';
+    ct.style.display = 'block';
+    if (combo % 3 === 0) { beep(523,0.1); beep(659,0.1); beep(784,0.1); }
   }
 }
 
-function showTapEffect(x, y, emoji) {
-  var el = document.createElement('div');
-  el.className = 'animal-tap-effect';
-  el.style.fontSize = '2.2em';
-  el.textContent = emoji;
-  el.style.left = (x - 22) + 'px';
-  el.style.top  = (y - 22) + 'px';
-  document.getElementById('game-container').appendChild(el);
-  el.addEventListener('animationend', function() { el.remove(); });
-}
+function hideCombo() { byId('combo-text').style.display = 'none'; }
 
-function spawnHearts(cx, cy) {
-  var container = document.getElementById('game-container');
-  var count = 5 + Math.floor(Math.random() * 3);
-  for (var i = 0; i < count; i++) {
+function showStars(cx, cy) {
+  var cont = byId('game-container');
+  for (var i = 0; i < 6; i++) {
     var el = document.createElement('div');
-    el.className = 'heart-particle';
-    el.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
-    var angle = (Math.PI * 2 * i / count) + Math.random() * 0.5;
-    var dist  = 40 + Math.random() * 50;
-    el.style.left = (cx - 11) + 'px';
-    el.style.top  = (cy - 11) + 'px';
-    el.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-    el.style.setProperty('--dy', (Math.sin(angle) * dist - 20) + 'px');
-    el.style.animationDelay = (Math.random() * 0.1) + 's';
-    container.appendChild(el);
-    el.addEventListener('animationend', function() { el.remove(); });
+    el.className = 'pop-star';
+    el.textContent = STARS[rnd(STARS.length)];
+    var a = Math.PI * 2 * i / 6 + Math.random() * 0.4;
+    var d = 35 + Math.random() * 45;
+    el.style.left = (cx - 10) + 'px';
+    el.style.top  = (cy - 10) + 'px';
+    el.style.setProperty('--dx', (Math.cos(a) * d) + 'px');
+    el.style.setProperty('--dy', (Math.sin(a) * d - 15) + 'px');
+    cont.appendChild(el);
+    (function(e) { e.addEventListener('animationend', function() { if(e.parentNode) e.parentNode.removeChild(e); }); })(el);
   }
 }
 
-function showScorePop(x, y, pts, c) {
+function showPts(cx, cy, pts, c) {
   var el = document.createElement('div');
   el.className = 'score-pop';
-  var bonus = c >= 5 ? ' x3🔥' : c >= 3 ? ' x2✨' : '';
-  el.textContent = '+' + pts + bonus;
-  el.style.left = (x - 24) + 'px';
-  el.style.top  = (y - 36) + 'px';
-  if (c >= 3) { el.style.color = c >= 5 ? '#FF3B3B' : '#FF9F00'; el.style.fontSize = '26px'; }
-  document.getElementById('game-container').appendChild(el);
-  el.addEventListener('animationend', function() { el.remove(); });
+  el.textContent = '+' + pts + (c >= 5 ? ' x3🔥' : c >= 3 ? ' x2✨' : '');
+  el.style.left = (cx - 20) + 'px';
+  el.style.top  = (cy - 32) + 'px';
+  if (c >= 3) el.style.color = c >= 5 ? '#FF0000' : '#FF9F00';
+  byId('game-container').appendChild(el);
+  el.addEventListener('animationend', function() { if(el.parentNode) el.parentNode.removeChild(el); });
 }
 
-function showCombo(n) {
-  var el = document.getElementById('combo-display');
-  if (n < 3) { el.className = ''; return; }
-  el.textContent = n >= 10 ? '🔥 ' + n + ' コンボ！！' : n >= 5 ? '✨ ' + n + ' コンボ！' : n + ' コンボ';
-  el.className = 'show';
-}
+// ── ユーティリティ ────────────────────────────────
+function byId(id) { return document.getElementById(id); }
+function setText(id, t) { byId(id).textContent = t; }
+function rnd(n) { return Math.floor(Math.random() * n); }
 
-// ── ゲーム終了 ────────────────────────────────────
-function endGame() {
-  running = false;
-  clearInterval(timerInterval);
-  clearTimeout(spawnTimeout);
-  playGameOver();
-
-  var isNew = score > bestScore;
-  if (isNew) {
-    bestScore = score;
-    try { localStorage.setItem('animalBest', bestScore); } catch(e){}
-  }
-
-  document.getElementById('result-score').textContent = score;
-  document.getElementById('result-best').textContent  = isNew ? '🎊 新記録！' : 'ベスト: ' + bestScore;
-  document.getElementById('result-medal').textContent =
-    score >= 300 ? '🥇' : score >= 150 ? '🥈' : score >= 50 ? '🥉' : '🎮';
-
-  setTimeout(function() {
-    document.getElementById('gameover-screen').style.display = 'flex';
-  }, 600);
-}
-
-// ── 初期化 ───────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  makeClouds();
-  document.getElementById('btn-start').addEventListener('click', startGame);
-  document.getElementById('btn-retry').addEventListener('click', startGame);
-  document.getElementById('btn-home').addEventListener('click', showStart);
-});
+// ── ボタン設定 ────────────────────────────────────
+byId('btn-start').onclick = startGame;
+byId('btn-retry').onclick = startGame;
+byId('btn-home').onclick  = showTitle;
 </script>
 </body>
 </html>
