@@ -22,6 +22,7 @@
     box-shadow:0 6px 18px rgba(50,30,80,0.08);
     margin-bottom:14px;
   }
+  .card[hidden] { display:none; }
   .card h2 { font-size:14.5px; font-weight:800; display:flex; align-items:center; gap:6px; margin-bottom:10px; }
   .step-badge {
     display:inline-flex; align-items:center; justify-content:center;
@@ -29,7 +30,12 @@
     background:#845ec2; color:#fff; font-size:11px; font-weight:800; flex-shrink:0;
   }
 
-  /* ---- Stage ---- */
+  /* ---- Mode tabs ---- */
+  #modeTabs { display:flex; gap:6px; margin-bottom:14px; }
+  #modeTabs .tab { flex:1; text-align:center; padding:11px 6px; border-radius:12px; background:#fff; color:#888; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(50,30,80,0.06); }
+  #modeTabs .tab.active { background:linear-gradient(90deg,#ff6f91,#845ec2); color:#fff; }
+
+  /* ---- Stage (photo mode) ---- */
   #stageWrap { display:flex; justify-content:center; }
   #stage {
     position:relative; width:100%; max-width:420px; aspect-ratio:3/4;
@@ -44,6 +50,23 @@
   }
   #stageEmpty .big { font-size:34px; }
   #stageEmpty[hidden] { display:none; }
+
+  /* ---- AR stage ---- */
+  #arStageWrap { display:flex; justify-content:center; }
+  #arMirror {
+    position:relative; width:100%; max-width:420px; aspect-ratio:3/4;
+    border-radius:14px; overflow:hidden; background:#111;
+    transform:scaleX(-1);
+  }
+  #arVideo, #arCanvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  #arVideo { background:#111; }
+  #arCanvas { pointer-events:none; }
+  #arHint {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:13px; text-align:center; padding:24px; line-height:1.7;
+    background:rgba(0,0,0,0.25); transform:scaleX(-1);
+  }
+  #arHint[hidden] { display:none; }
 
   .layer {
     position:absolute; touch-action:none; cursor:grab;
@@ -72,6 +95,7 @@
     transition:transform .1s ease;
   }
   button:active { transform:scale(0.96); }
+  button:disabled { opacity:0.6; cursor:default; }
   .btn-primary { background:linear-gradient(90deg,#ff6f91,#845ec2); color:#fff; }
   .btn-secondary { background:#f1eefc; color:#5b3f9c; }
   .btn-ghost { background:#f4f4f7; color:#555; }
@@ -94,9 +118,11 @@
   .chip img { width:22px; height:22px; object-fit:cover; border-radius:50%; background:#fff; }
 
   .adjustBox { margin-top:12px; padding-top:12px; border-top:1px dashed #eee; }
+  .adjustBox[hidden] { display:none; }
   .adjustBox .field-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-  .adjustBox .field-row span { font-size:12px; color:#777; width:64px; flex-shrink:0; }
+  .adjustBox .field-row span { font-size:12px; color:#777; width:72px; flex-shrink:0; }
   .adjustBox input[type=range] { flex:1; }
+  .adjustBox-label { font-size:11.5px; font-weight:700; color:#8a63c9; margin-bottom:6px; }
 
   .tabs { display:flex; gap:6px; margin-bottom:10px; }
   .tab { flex:1; text-align:center; padding:8px; border-radius:10px; background:#f4f4f7; font-size:12.5px; font-weight:700; color:#888; cursor:pointer; }
@@ -114,10 +140,15 @@
 <div class="app">
   <header>
     <h1>👗 バーチャル試着室</h1>
-    <p>楽天市場やAmazonで気になった服の画像を、自分の写真に重ねて<br>試着したイメージを作れます。すべてこの端末内だけで処理されます。</p>
+    <p>楽天市場やAmazonで気になった服の画像を、自分の写真や<br>ライブカメラに重ねて試着イメージを作れます。すべてこの端末内だけで処理されます。</p>
   </header>
 
-  <div class="card">
+  <div id="modeTabs">
+    <div class="tab active" data-mode="photo">🖼 写真で試着</div>
+    <div class="tab" data-mode="ar">📷 ライブARで試着</div>
+  </div>
+
+  <div class="card" id="photoModeCard">
     <h2><span class="step-badge">1</span>自分の写真を選ぶ</h2>
     <div id="stageWrap">
       <div id="stage">
@@ -134,6 +165,22 @@
     </div>
     <input type="file" id="photoInput" accept="image/*" hidden>
     <input type="file" id="photoCameraInput" accept="image/*" capture="user" hidden>
+  </div>
+
+  <div class="card" id="arModeCard" hidden>
+    <h2><span class="step-badge">1</span>カメラを起動</h2>
+    <div id="arStageWrap">
+      <div id="arMirror">
+        <video id="arVideo" playsinline muted></video>
+        <canvas id="arCanvas"></canvas>
+        <div id="arHint">📷 カメラをオンにしてください</div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button class="btn-primary btn-full" id="btnArStart">📷 カメラを起動してARを開始</button>
+      <button class="btn-ghost btn-full" id="btnArStop" hidden>■ カメラを停止</button>
+    </div>
+    <div class="note">カメラ映像はこの端末内だけで処理され、外部に送信されることはありません。初回起動時のみAR用ライブラリの読み込みに通信が必要です。カメラ利用にはHTTPS（保護された接続）環境と許可操作が必要です。うまく起動しない場合は「写真で試着」モードもお試しください。</div>
   </div>
 
   <div class="card" id="addClothCard">
@@ -153,7 +200,7 @@
       <div class="note">商品ページで画像を右クリック →「画像のアドレスをコピー」で取得できます。サイトによっては保存機能の都合上、後述の理由でダウンロード保存に対応できない場合があります。</div>
     </div>
 
-    <label class="field-label">アイテムの種類（初期位置に使います）</label>
+    <label class="field-label">アイテムの種類（配置に使います）</label>
     <select id="categorySelect">
       <option value="top">トップス（Tシャツ・シャツなど）</option>
       <option value="bottom">ボトムス（パンツ・スカート）</option>
@@ -161,7 +208,8 @@
       <option value="other">その他・小物</option>
     </select>
 
-    <div class="hint">💡 追加した服は写真の上でドラッグして移動、右下の丸ハンドルをドラッグして拡大・回転できます。スマホはピンチ操作にも対応しています。</div>
+    <div class="hint" id="clothHintPhoto">💡 追加した服は写真の上でドラッグして移動、右下の丸ハンドルをドラッグして拡大・回転できます。スマホはピンチ操作にも対応しています。</div>
+    <div class="hint" id="clothHintAr" hidden>💡 ライブARモードでは、肩・腰の動きを認識して服を自動追従させます。ズレる場合は次のステップの補正スライダーで調整してください。</div>
   </div>
 
   <div class="card" id="layersCard" hidden>
@@ -176,6 +224,14 @@
         <button class="btn-ghost btn-sm" id="btnDuplicate">⧉ 複製</button>
       </div>
     </div>
+
+    <div class="adjustBox" id="arAdjustBox" hidden>
+      <div class="adjustBox-label">AR位置補正</div>
+      <div class="field-row"><span>横位置</span><input type="range" id="arDxRange" min="-50" max="50" value="0"></div>
+      <div class="field-row"><span>縦位置</span><input type="range" id="arDyRange" min="-50" max="50" value="0"></div>
+      <div class="field-row"><span>サイズ</span><input type="range" id="arScaleRange" min="50" max="200" value="100"></div>
+      <div class="field-row"><span>角度</span><input type="range" id="arRotRange" min="-45" max="45" value="0"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -189,12 +245,14 @@
 
   <a id="downloadLink" hidden></a>
 
-  <footer>本アプリは服の画像を写真に重ねて表示する簡易シミュレーターです。<br>実際の着用感・サイズ感は商品ページの情報も併せてご確認ください。</footer>
+  <footer>本アプリは服の画像を写真・カメラ映像に重ねて表示する簡易シミュレーターです。<br>実際の着用感・サイズ感は商品ページの情報も併せてご確認ください。</footer>
 </div>
 
 <script>
 (function(){
   "use strict";
+
+  const REF_W = 420, REF_H = 560; // 3:4 reference used for initial (photo-mode) placement math
 
   const stage = document.getElementById('stage');
   const stagePhoto = document.getElementById('stagePhoto');
@@ -205,10 +263,29 @@
   const opacityRange = document.getElementById('opacityRange');
   const downloadLink = document.getElementById('downloadLink');
 
+  const modeTabs = document.getElementById('modeTabs');
+  const photoModeCard = document.getElementById('photoModeCard');
+  const arModeCard = document.getElementById('arModeCard');
+  const clothHintPhoto = document.getElementById('clothHintPhoto');
+  const clothHintAr = document.getElementById('clothHintAr');
+  const arAdjustBox = document.getElementById('arAdjustBox');
+  const arDxRange = document.getElementById('arDxRange');
+  const arDyRange = document.getElementById('arDyRange');
+  const arScaleRange = document.getElementById('arScaleRange');
+  const arRotRange = document.getElementById('arRotRange');
+
+  const arVideo = document.getElementById('arVideo');
+  const arCanvas = document.getElementById('arCanvas');
+  const arHint = document.getElementById('arHint');
+  const btnArStart = document.getElementById('btnArStart');
+  const btnArStop = document.getElementById('btnArStop');
+  let arCanvasCtx = null;
+
   let photo = null; // {img, naturalW, naturalH}
-  let layers = [];  // {id, img, el, xf, yf, wf, hf, rotation, opacity, dataUrl, safe}
+  let layers = [];  // {id, img, el, category, xf, yf, wf, hf, rotation, opacity, safe, arDx, arDy, arScale, arRotOffset}
   let selectedId = null;
   let uid = 1;
+  let currentMode = 'photo';
 
   const CATEGORY_DEFAULT = {
     top:    { yf:0.32, wf:0.42 },
@@ -236,6 +313,23 @@
     });
   }
 
+  // ---------- Mode switching ----------
+  modeTabs.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>setMode(tab.dataset.mode));
+  });
+
+  function setMode(mode){
+    currentMode = mode;
+    modeTabs.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
+    photoModeCard.hidden = mode !== 'photo';
+    arModeCard.hidden = mode !== 'ar';
+    clothHintPhoto.hidden = mode !== 'photo';
+    clothHintAr.hidden = mode !== 'ar';
+    if (mode !== 'ar') stopAR();
+    if (mode === 'photo') renderAllLayers();
+    updateAdjustVisibility();
+  }
+
   // ---------- Photo ----------
   document.getElementById('btnPickPhoto').addEventListener('click', ()=>document.getElementById('photoInput').click());
   document.getElementById('btnCameraPhoto').addEventListener('click', ()=>document.getElementById('photoCameraInput').click());
@@ -259,12 +353,12 @@
   }
 
   // ---------- Add clothing ----------
-  document.querySelectorAll('.tab').forEach(tab=>{
+  document.querySelectorAll('#addClothCard .tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-      document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('#addClothCard .tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('#addClothCard .tabPanel').forEach(p=>p.classList.remove('active'));
       tab.classList.add('active');
-      document.querySelector(`.tabPanel[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+      document.querySelector(`#addClothCard .tabPanel[data-panel="${tab.dataset.tab}"]`).classList.add('active');
     });
   });
 
@@ -287,30 +381,31 @@
     if (!url) { alert('画像URLを入力してください。'); return; }
     try {
       const img = await loadImage(url, true);
-      addLayer(img, false, url);
+      addLayer(img, false);
     } catch(err){
       alert('画像を読み込めませんでした。URLが正しいか、画像への直接リンクかご確認ください。');
     }
   });
 
   function addLayer(img, safe){
-    if (!photo){ alert('先に自分の写真を選んでください。'); return; }
+    if (currentMode === 'photo' && !photo){ alert('先に自分の写真を選んでください。'); return; }
     const cat = document.getElementById('categorySelect').value;
     const def = CATEGORY_DEFAULT[cat];
-    const stageW = stage.clientWidth, stageH = stage.clientHeight;
-    const pwPx = def.wf * stageW;
+    const pwPx = def.wf * REF_W;
     const phPx = pwPx * (img.naturalHeight / img.naturalWidth);
 
     const layer = {
       id: uid++,
       img,
+      category: cat,
       xf: 0.5,
       yf: def.yf,
       wf: def.wf,
-      hf: phPx / stageH,
+      hf: phPx / REF_H,
       rotation: 0,
       opacity: 1,
-      safe
+      safe,
+      arDx: 0, arDy: 0, arScale: 1, arRotOffset: 0
     };
     layers.push(layer);
     buildLayerEl(layer);
@@ -320,7 +415,7 @@
     renderLayerList();
   }
 
-  // ---------- Layer DOM + gestures ----------
+  // ---------- Layer DOM + gestures (photo-mode manual placement) ----------
   function buildLayerEl(layer){
     const el = document.createElement('div');
     el.className = 'layer';
@@ -466,7 +561,7 @@
   }
 
   function renderAllLayers(){ layers.forEach(renderLayer); }
-  window.addEventListener('resize', renderAllLayers);
+  window.addEventListener('resize', ()=>{ if (currentMode==='photo') renderAllLayers(); });
 
   function selectLayer(id){
     selectedId = id;
@@ -478,7 +573,20 @@
     } else {
       adjustBox.hidden = true;
     }
+    updateAdjustVisibility();
     renderLayerList();
+  }
+
+  function updateAdjustVisibility(){
+    const layer = layers.find(l=>l.id===selectedId);
+    const showAr = !!(layer && currentMode === 'ar');
+    arAdjustBox.hidden = !showAr;
+    if (showAr){
+      arDxRange.value = layer.arDx || 0;
+      arDyRange.value = layer.arDy || 0;
+      arScaleRange.value = Math.round((layer.arScale || 1) * 100);
+      arRotRange.value = layer.arRotOffset || 0;
+    }
   }
 
   stage.addEventListener('pointerdown', (e)=>{
@@ -494,6 +602,7 @@
     renderAllLayers();
     renderLayerList();
     adjustBox.hidden = true;
+    arAdjustBox.hidden = true;
     layersCard.hidden = layers.length === 0;
   }
 
@@ -516,6 +625,27 @@
     if (!layer) return;
     layer.opacity = opacityRange.value/100;
     renderLayer(layer);
+  });
+
+  arDxRange.addEventListener('input', ()=>{
+    const layer = layers.find(l=>l.id===selectedId);
+    if (!layer) return;
+    layer.arDx = +arDxRange.value;
+  });
+  arDyRange.addEventListener('input', ()=>{
+    const layer = layers.find(l=>l.id===selectedId);
+    if (!layer) return;
+    layer.arDy = +arDyRange.value;
+  });
+  arScaleRange.addEventListener('input', ()=>{
+    const layer = layers.find(l=>l.id===selectedId);
+    if (!layer) return;
+    layer.arScale = (+arScaleRange.value) / 100;
+  });
+  arRotRange.addEventListener('input', ()=>{
+    const layer = layers.find(l=>l.id===selectedId);
+    if (!layer) return;
+    layer.arRotOffset = +arRotRange.value;
   });
 
   document.getElementById('btnFront').addEventListener('click', ()=>{
@@ -544,8 +674,181 @@
     renderLayerList();
   });
 
+  // ================= Live AR mode =================
+  let arLibsLoaded = false;
+  let detector = null;
+  let arRunning = false;
+  let arRafId = null;
+  let currentKp = null;
+  let kpSmooth = {};
+  let lastPoseTime = 0;
+
+  function loadScript(src){
+    return new Promise((resolve,reject)=>{
+      if (document.querySelector(`script[src="${src}"]`)){ resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = ()=>resolve();
+      s.onerror = ()=>reject(new Error('failed to load ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function loadArLibraries(){
+    if (arLibsLoaded) return;
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js');
+    arLibsLoaded = true;
+  }
+
+  btnArStart.addEventListener('click', startAR);
+  btnArStop.addEventListener('click', stopAR);
+
+  async function startAR(){
+    btnArStart.disabled = true;
+    arHint.hidden = false;
+    arHint.textContent = '読み込み中…';
+    try {
+      await loadArLibraries();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      arVideo.srcObject = stream;
+      await arVideo.play();
+      arCanvas.width = arVideo.videoWidth || 640;
+      arCanvas.height = arVideo.videoHeight || 480;
+      arCanvasCtx = arCanvas.getContext('2d');
+
+      arHint.textContent = 'AIモデルを準備中…';
+      detector = await poseDetection.createDetector(
+        poseDetection.SupportedModels.MoveNet,
+        { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
+      );
+
+      kpSmooth = {};
+      currentKp = null;
+      arRunning = true;
+      btnArStart.hidden = true;
+      btnArStop.hidden = false;
+      arHint.textContent = '全身または上半身が映るようにしてください';
+      poseTick();
+    } catch(err){
+      arHint.textContent = '📷 カメラをオンにしてください';
+      alert('カメラまたはAR機能を起動できませんでした。カメラへのアクセスを許可しているか、通信環境をご確認のうえ、「写真で試着」モードもお試しください。');
+    } finally {
+      btnArStart.disabled = false;
+    }
+  }
+
+  function stopAR(){
+    arRunning = false;
+    if (arRafId) cancelAnimationFrame(arRafId);
+    arRafId = null;
+    if (arVideo.srcObject){
+      arVideo.srcObject.getTracks().forEach(t=>t.stop());
+      arVideo.srcObject = null;
+    }
+    if (arCanvasCtx) arCanvasCtx.clearRect(0,0,arCanvas.width,arCanvas.height);
+    btnArStart.hidden = false;
+    btnArStop.hidden = true;
+    arHint.hidden = false;
+    arHint.textContent = '📷 カメラをオンにしてください';
+    currentKp = null;
+  }
+
+  function updateSmoothedKeypoints(rawKeypoints){
+    const alpha = 0.5;
+    rawKeypoints.forEach(k=>{
+      const prev = kpSmooth[k.name];
+      if (!prev){
+        kpSmooth[k.name] = { x:k.x, y:k.y, score:k.score };
+      } else {
+        kpSmooth[k.name] = {
+          x: prev.x + (k.x-prev.x)*alpha,
+          y: prev.y + (k.y-prev.y)*alpha,
+          score: k.score
+        };
+      }
+    });
+    currentKp = kpSmooth;
+  }
+
+  function computeAnchor(category, kpMap, img, ar){
+    const ls = kpMap.left_shoulder, rs = kpMap.right_shoulder, lh = kpMap.left_hip, rh = kpMap.right_hip;
+    const minScore = 0.3;
+    if (!ls || !rs || !lh || !rh) return null;
+    if (ls.score<minScore || rs.score<minScore || lh.score<minScore || rh.score<minScore) return null;
+
+    const shoulderMid = { x:(ls.x+rs.x)/2, y:(ls.y+rs.y)/2 };
+    const hipMid = { x:(lh.x+rh.x)/2, y:(lh.y+rh.y)/2 };
+    const shoulderWidth = Math.hypot(rs.x-ls.x, rs.y-ls.y);
+    const hipWidth = Math.hypot(rh.x-lh.x, rh.y-lh.y);
+    const torsoLen = Math.hypot(hipMid.x-shoulderMid.x, hipMid.y-shoulderMid.y) || shoulderWidth;
+    const shoulderAngle = Math.atan2(rs.y-ls.y, rs.x-ls.x) * 180/Math.PI;
+    const hipAngle = Math.atan2(rh.y-lh.y, rh.x-lh.x) * 180/Math.PI;
+
+    let cx, cy, width, rotation;
+    if (category === 'top'){
+      cx = shoulderMid.x; cy = shoulderMid.y + torsoLen*0.55;
+      width = shoulderWidth*1.7; rotation = shoulderAngle;
+    } else if (category === 'bottom'){
+      cx = hipMid.x; cy = hipMid.y + torsoLen*0.55;
+      width = hipWidth*1.9; rotation = hipAngle;
+    } else if (category === 'dress'){
+      cx = shoulderMid.x; cy = shoulderMid.y + torsoLen*0.85;
+      width = shoulderWidth*1.9; rotation = shoulderAngle;
+    } else {
+      cx = shoulderMid.x; cy = shoulderMid.y;
+      width = shoulderWidth*0.8; rotation = shoulderAngle;
+    }
+
+    width *= (ar.scale || 1);
+    const height = width * (img.naturalHeight/img.naturalWidth);
+    cx += ((ar.dx||0)/100) * shoulderWidth;
+    cy += ((ar.dy||0)/100) * shoulderWidth;
+    rotation += (ar.rot||0);
+
+    return { cx, cy, w:width, h:height, rotation };
+  }
+
+  function renderAROverlay(){
+    if (!arCanvasCtx) return;
+    arCanvasCtx.clearRect(0,0,arCanvas.width,arCanvas.height);
+    if (!currentKp) return;
+    layers.forEach(layer=>{
+      const ar = { dx:layer.arDx||0, dy:layer.arDy||0, scale:layer.arScale||1, rot:layer.arRotOffset||0 };
+      const a = computeAnchor(layer.category, currentKp, layer.img, ar);
+      if (!a) return;
+      arCanvasCtx.save();
+      arCanvasCtx.globalAlpha = layer.opacity;
+      arCanvasCtx.translate(a.cx, a.cy);
+      arCanvasCtx.rotate(a.rotation*Math.PI/180);
+      arCanvasCtx.drawImage(layer.img, -a.w/2, -a.h/2, a.w, a.h);
+      arCanvasCtx.restore();
+    });
+  }
+
+  async function poseTick(){
+    if (!arRunning) return;
+    const now = performance.now();
+    if (detector && now - lastPoseTime > 100){
+      lastPoseTime = now;
+      try {
+        const poses = await detector.estimatePoses(arVideo, { flipHorizontal:false });
+        if (poses && poses[0]){
+          updateSmoothedKeypoints(poses[0].keypoints);
+          arHint.hidden = true;
+        } else {
+          currentKp = null;
+          arHint.hidden = false;
+          arHint.textContent = '体全体が映るように調整してください';
+        }
+      } catch(err){ /* skip transient inference errors */ }
+    }
+    renderAROverlay();
+    arRafId = requestAnimationFrame(poseTick);
+  }
+
   // ---------- Save ----------
-  document.getElementById('btnSave').addEventListener('click', ()=>{
+  function exportPhotoComposite(){
     if (!photo){ alert('まず自分の写真を選んでください。'); return; }
     const canvas = document.createElement('canvas');
     canvas.width = photo.naturalW;
@@ -575,10 +878,51 @@
     } catch(err){
       alert('外部サイトの画像が含まれているため、この端末では保存画像を作成できませんでした。\n「画像URL」で読み込んだ服の画像がある場合は、画像を一度端末に保存してから「画像ファイル」で追加し直してください。');
     }
+  }
+
+  function exportARSnapshot(){
+    if (!arRunning || !arVideo.videoWidth){ alert('先にカメラを起動してください。'); return; }
+    const canvas = document.createElement('canvas');
+    canvas.width = arVideo.videoWidth;
+    canvas.height = arVideo.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(arVideo, 0, 0, canvas.width, canvas.height);
+    if (currentKp){
+      layers.forEach(layer=>{
+        const ar = { dx:layer.arDx||0, dy:layer.arDy||0, scale:layer.arScale||1, rot:layer.arRotOffset||0 };
+        const a = computeAnchor(layer.category, currentKp, layer.img, ar);
+        if (!a) return;
+        ctx.save();
+        ctx.globalAlpha = layer.opacity;
+        ctx.translate(a.cx, a.cy);
+        ctx.rotate(a.rotation*Math.PI/180);
+        ctx.drawImage(layer.img, -a.w/2, -a.h/2, a.w, a.h);
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+    try {
+      const url = canvas.toDataURL('image/png');
+      downloadLink.href = url;
+      downloadLink.download = 'ar-try-on.png';
+      downloadLink.click();
+    } catch(err){
+      alert('外部サイトの画像が含まれているため、この端末では保存画像を作成できませんでした。\n「画像URL」で読み込んだ服の画像がある場合は、画像を一度端末に保存してから「画像ファイル」で追加し直してください。');
+    }
+  }
+
+  document.getElementById('btnSave').addEventListener('click', ()=>{
+    if (currentMode === 'ar') exportARSnapshot();
+    else exportPhotoComposite();
   });
 
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    if (!confirm('写真と追加した服をすべて削除して最初からやり直しますか？')) return;
+    if (!confirm('写真・カメラ映像と追加した服をすべて削除して最初からやり直しますか？')) return;
+    stopAR();
+    setMode('photo');
     photo = null;
     stagePhoto.hidden = true;
     stagePhoto.src = '';
@@ -588,6 +932,7 @@
     selectedId = null;
     layersCard.hidden = true;
     adjustBox.hidden = true;
+    arAdjustBox.hidden = true;
     renderLayerList();
   });
 
