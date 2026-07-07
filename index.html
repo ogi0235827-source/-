@@ -2,415 +2,95 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>どうぶつタッチ！</title>
-  <style>
-    * {
-      margin: 0; padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: #87CEEB;
-      font-family: Arial, sans-serif;
-    }
-    #game-container {
-      position: relative;
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: linear-gradient(180deg, #87CEEB 0%, #C8F0FF 100%);
-    }
-
-    /* HUD */
-    #hud {
-      position: absolute; top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.6);
-    }
-    .hud-box {
-      background: white; border-radius: 16px;
-      padding: 4px 14px; text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      min-width: 80px;
-    }
-    .hud-label { font-size: 10px; color: #999; font-weight: bold; }
-    #score { font-size: 26px; font-weight: bold; color: #FF5555; }
-    #timer { font-size: 26px; font-weight: bold; color: #44BBAA; }
-    #timer.urgent { color: #FF0000; }
-    #level-badge {
-      background: #FFD700; color: white;
-      border-radius: 50%; width: 44px; height: 44px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    #level-num { font-size: 16px; line-height: 1; }
-
-    /* 動物カード */
-    .animal-card {
-      position: absolute;
-      top: 100%;
-      border-radius: 16px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background: white;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      padding: 4px;
-      cursor: pointer;
-      touch-action: manipulation;
-      animation: jumpIn ease-out forwards;
-    }
-    .animal-emoji { line-height: 1; }
-    .animal-name  { font-size: 11px; font-weight: bold; color: #555; }
-
-    @keyframes jumpIn {
-      0%   { transform: translateY(0) scale(0.4); opacity: 0; }
-      12%  { transform: translateY(-30vh) scale(1.1); opacity: 1; }
-      20%  { transform: translateY(-26vh) scale(0.96); }
-      28%  { transform: translateY(-30vh) scale(1); }
-      85%  { transform: translateY(-120vh) scale(1); opacity: 1; }
-      100% { transform: translateY(-128vh) scale(1); opacity: 0; }
-    }
-
-    /* エフェクト */
-    .pop-star {
-      position: absolute; pointer-events: none;
-      z-index: 200; font-size: 20px;
-      animation: starFly 0.7s ease-out forwards;
-    }
-    @keyframes starFly {
-      0%   { transform: translate(0,0) scale(0.5); opacity: 1; }
-      100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
-    }
-    .score-pop {
-      position: absolute; pointer-events: none;
-      font-size: 20px; font-weight: bold;
-      color: #FF5555; z-index: 201;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-      animation: scoreFly 0.8s ease-out forwards;
-    }
-    @keyframes scoreFly {
-      0%   { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-60px); opacity: 0; }
-    }
-    #combo-text {
-      position: absolute; top: 72px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 150; font-size: 24px; font-weight: bold;
-      color: #FF5555; text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
-      pointer-events: none;
-      display: none; white-space: nowrap;
-    }
-
-    /* 草 */
-    #grass {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: 55px;
-      background: linear-gradient(#7EC850, #5BA032);
-      z-index: 50;
-    }
-
-    /* オーバーレイ画面 */
-    .overlay {
-      position: absolute; inset: 0; z-index: 300;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(100,180,230,0.92);
-    }
-    .card {
-      background: white; border-radius: 24px;
-      padding: 30px 28px; text-align: center;
-      width: 88%; max-width: 310px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-    }
-    .card-title { font-size: 36px; margin-bottom: 6px; }
-    .card-sub   { font-size: 15px; color: #888; margin-bottom: 12px; }
-    .card-info  { font-size: 13px; color: #666; line-height: 1.9; margin-bottom: 18px; }
-    .btn {
-      display: block; width: 100%;
-      padding: 16px; margin-top: 10px;
-      border: none; border-radius: 16px;
-      font-size: 20px; font-weight: bold;
-      cursor: pointer;
-      touch-action: manipulation;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .btn-orange { background: #FF6B3B; color: white; }
-    .btn-teal   { background: #3BBFB0; color: white; }
-    .result-pts { font-size: 52px; font-weight: bold; color: #FF5555; }
-    .result-sub { font-size: 13px; color: #aaa; margin-top: 4px; }
-    .medal      { font-size: 44px; margin: 6px 0; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ナースのキャリアノートは、看護師の転職・キャリアに関する情報をわかりやすくまとめた個人運営の情報サイトです。転職の進め方、転職サイトの選び方、履歴書・面接対策などを解説しています。">
+  <title>ナースのキャリアノート|看護師の転職・キャリア情報サイト</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="game-container">
-  <div id="grass"></div>
 
-  <div id="hud">
-    <div class="hud-box">
-      <div class="hud-label">スコア</div>
-      <div id="score">0</div>
-    </div>
-    <div id="level-badge">
-      <div style="font-size:8px">Lv</div>
-      <div id="level-num">1</div>
-    </div>
-    <div class="hud-box">
-      <div class="hud-label">のこり</div>
-      <div id="timer">60</div>
-    </div>
-  </div>
+  <div class="pr-notice">当サイトはアフィリエイト広告(A8.netほか)を利用しています。</div>
 
-  <div id="combo-text"></div>
+  <header class="site-header">
+    <div class="container">
+      <p class="site-title"><a href="index.html"><span class="site-title-icon">🩺</span>ナースのキャリアノート</a></p>
+      <nav class="global-nav" aria-label="グローバルナビゲーション">
+        <ul>
+          <li><a href="index.html">ホーム</a></li>
+          <li><a href="index.html#articles">記事一覧</a></li>
+          <li><a href="about.html">運営者情報</a></li>
+          <li><a href="contact.html">お問い合わせ</a></li>
+        </ul>
+      </nav>
+      <p class="site-tagline">看護師の転職・キャリアに関する情報をわかりやすくお届けする個人運営サイト</p>
+    </div>
+  </header>
 
-  <!-- スタート -->
-  <div class="overlay" id="start-screen">
-    <div class="card">
-      <div class="card-title">🐾 どうぶつタッチ！</div>
-      <div class="card-sub">でてきた どうぶつを タッチ！</div>
-      <div class="card-info">
-        🐶 どうぶつが とびだすよ！<br>
-        ⭐ ちいさいほど こうとく！<br>
-        ✨ つづけると ボーナス！<br>
-        ⏰ 60びょうで がんばろう！
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>看護師の「これからの働き方」を、<br>一緒に考える情報サイト</h1>
+        <p>ナースのキャリアノートは、転職を考え始めた看護師さんに向けて、転職活動の進め方・転職サイトの選び方・応募書類や面接の準備などの基礎知識を、中立的な立場でわかりやすくまとめた情報サイトです。</p>
       </div>
-      <button class="btn btn-orange" id="btn-start">▶ あそぶ！</button>
+    </section>
+
+    <section class="section" id="articles">
+      <div class="container">
+        <h2>記事一覧</h2>
+        <div class="card-grid">
+          <a class="card" href="articles/reasons.html">
+            <span class="card-icon">💭</span>
+            <h3>看護師が転職を考える主な理由と、動く前に整理しておきたいこと</h3>
+            <p>「辞めたい」と感じたときに、感情のまま動かず後悔しないための考え方の整理術を紹介します。</p>
+          </a>
+          <a class="card" href="articles/how-to-choose.html">
+            <span class="card-icon">🔍</span>
+            <h3>看護師転職サイトの選び方と上手な使い方</h3>
+            <p>転職サイトの仕組みと種類、選ぶときに確認したいポイント、担当者との付き合い方を解説します。</p>
+          </a>
+          <a class="card" href="articles/resume.html">
+            <span class="card-icon">📝</span>
+            <h3>看護師向け 履歴書・職務経歴書の書き方</h3>
+            <p>看護師の応募書類ならではの書き方のポイントを、項目ごとに例を交えて説明します。</p>
+          </a>
+          <a class="card" href="articles/interview.html">
+            <span class="card-icon">🗣️</span>
+            <h3>看護師の転職面接でよく聞かれる質問と準備のポイント</h3>
+            <p>面接で定番となっている質問の意図と、答えを組み立てるときの考え方をまとめました。</p>
+          </a>
+          <a class="card" href="articles/workstyle.html">
+            <span class="card-icon">🏥</span>
+            <h3>病棟以外もある。看護師の働き方・職場の種類を比較</h3>
+            <p>クリニック・訪問看護・介護施設・企業など、病棟以外の職場の特徴を比較して紹介します。</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <h2>このサイトについて</h2>
+        <p>ナースのキャリアノートは、個人が運営する看護師向けのキャリア情報サイトです。「転職した方がいいのか迷っている」「何から始めればいいのかわからない」という段階の方が、落ち着いて情報を整理できることを目指して記事を作成しています。</p>
+        <p>掲載している情報は、公的機関の公開情報や一般に公開されている資料を参考に、個人の見解としてまとめたものです。転職はご自身の状況によって最適な選択が異なりますので、最終的な判断はご自身の責任で行っていただくようお願いいたします。</p>
+        <p style="margin-top: 16px;"><a class="btn" href="about.html">運営者情報を見る</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <nav class="footer-nav" aria-label="フッターナビゲーション">
+        <ul>
+          <li><a href="index.html">ホーム</a></li>
+          <li><a href="about.html">運営者情報</a></li>
+          <li><a href="privacy.html">プライバシーポリシー・免責事項</a></li>
+          <li><a href="contact.html">お問い合わせ</a></li>
+          <li><a href="sitemap.html">サイトマップ</a></li>
+        </ul>
+      </nav>
+      <p class="copyright">&copy; 2026 ナースのキャリアノート</p>
     </div>
-  </div>
+  </footer>
 
-  <!-- ゲームオーバー -->
-  <div class="overlay" id="end-screen" style="display:none">
-    <div class="card">
-      <div class="medal" id="end-medal">🥇</div>
-      <div class="result-pts" id="end-score">0</div>
-      <div class="result-sub" id="end-best">ベスト: 0</div>
-      <button class="btn btn-teal" id="btn-retry">🔄 もう一度！</button>
-      <button class="btn btn-orange" id="btn-home" style="margin-top:8px">🏠 タイトルへ</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ── 定数 ──────────────────────────────────────────
-var GAME_TIME = 60;
-var ANIMALS = [
-  '🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁',
-  '🐮','🐷','🐸','🐵','🐔','🐧','🦆','🦋','🐢','🐬',
-  '🦓','🦒','🐘','🦜','🦔','🐇','🦉','🐺','🐴','🦕'
-];
-var NAMES = {
-  '🐶':'いぬ','🐱':'ねこ','🐭':'ねずみ','🐰':'うさぎ','🦊':'きつね',
-  '🐻':'くま','🐼':'パンダ','🐨':'コアラ','🐯':'とら','🦁':'らいおん',
-  '🐮':'うし','🐷':'ぶた','🐸':'かえる','🐵':'さる','🐔':'にわとり',
-  '🐧':'ペンギン','🦆':'あひる','🦋':'ちょうちょ','🐢':'かめ','🐬':'いるか',
-  '🦓':'しまうま','🦒':'きりん','🐘':'ぞう','🦜':'おうむ','🦔':'ハリネズミ',
-  '🐇':'うさぎ','🦉':'ふくろう','🐺':'おおかみ','🐴':'うま','🦕':'きょうりゅう'
-};
-var BORDERS = ['#FF6B6B','#FFD700','#4ECDC4','#FF9F7F','#C77DFF','#5BC8F5','#FF85A2','#7EC850'];
-var STARS   = ['⭐','✨','💛','💚','💙','🧡','❤️','💜'];
-
-// ── 状態 ──────────────────────────────────────────
-var score = 0, timeLeft = GAME_TIME, level = 1;
-var combo = 0, comboTimer = null;
-var timerInt = null, spawnTO = null;
-var running = false;
-var bestScore = 0;
-try { bestScore = parseInt(localStorage.getItem('ab2') || '0') || 0; } catch(e){}
-
-// ── オーディオ ────────────────────────────────────
-var actx = null;
-function beep(freq, dur) {
-  try {
-    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-    if (actx.state === 'suspended') actx.resume();
-    var o = actx.createOscillator(), g = actx.createGain();
-    o.connect(g); g.connect(actx.destination);
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(0.2, actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
-    o.start(); o.stop(actx.currentTime + dur);
-  } catch(e) {}
-}
-
-// ── ゲーム制御 ────────────────────────────────────
-function startGame() {
-  score = 0; timeLeft = GAME_TIME; level = 1; combo = 0; running = true;
-  setText('score', '0');
-  setText('timer', '' + GAME_TIME);
-  byId('timer').className = '';
-  setText('level-num', '1');
-  byId('combo-text').style.display = 'none';
-  byId('start-screen').style.display = 'none';
-  byId('end-screen').style.display = 'none';
-  removeCards();
-  clearInterval(timerInt);
-  clearTimeout(spawnTO);
-  timerInt = setInterval(tick, 1000);
-  spawn();
-}
-
-function showTitle() {
-  running = false;
-  clearInterval(timerInt); clearTimeout(spawnTO);
-  removeCards();
-  byId('end-screen').style.display = 'none';
-  byId('start-screen').style.display = 'flex';
-}
-
-function removeCards() {
-  var cs = document.querySelectorAll('.animal-card');
-  for (var i = 0; i < cs.length; i++) cs[i].remove();
-}
-
-function tick() {
-  timeLeft--;
-  setText('timer', '' + timeLeft);
-  if (timeLeft <= 10) byId('timer').className = 'urgent';
-  level = Math.min(5, Math.floor((GAME_TIME - timeLeft) / 15) + 1);
-  setText('level-num', '' + level);
-  if (timeLeft <= 0) endGame();
-}
-
-function endGame() {
-  running = false;
-  clearInterval(timerInt); clearTimeout(spawnTO);
-  beep(300, 0.4);
-  var isNew = score > bestScore;
-  if (isNew) { bestScore = score; try { localStorage.setItem('ab2', bestScore); } catch(e){} }
-  setText('end-score', '' + score);
-  setText('end-best',  isNew ? '🎊 新記録！' : 'ベスト: ' + bestScore);
-  setText('end-medal', score >= 300 ? '🥇' : score >= 150 ? '🥈' : score >= 50 ? '🥉' : '🎮');
-  setTimeout(function() { byId('end-screen').style.display = 'flex'; }, 500);
-}
-
-// ── スポーン ──────────────────────────────────────
-function spawn() {
-  if (!running) return;
-  spawnCard();
-  var d = Math.max(400, 1200 - level * 140) + Math.random() * 300;
-  spawnTO = setTimeout(function() { if (running) spawn(); }, d);
-}
-
-function spawnCard() {
-  if (!running) return;
-  var sz = pickSize();
-  var emoji = ANIMALS[rnd(ANIMALS.length)];
-  var name  = NAMES[emoji] || '';
-  var bdr   = BORDERS[rnd(BORDERS.length)];
-  var dur   = Math.max(2.5, 6 - level * 0.5) + Math.random() * 2;
-
-  var card = document.createElement('div');
-  card.className = 'animal-card';
-  card.style.width  = sz + 'px';
-  card.style.height = sz + 'px';
-  card.style.left   = (4 + Math.random() * 80) + '%';
-  card.style.border = '3px solid ' + bdr;
-  card.style.animationDuration = dur.toFixed(2) + 's';
-
-  var ee = document.createElement('div');
-  ee.className = 'animal-emoji';
-  ee.style.fontSize = Math.round(sz * 0.5) + 'px';
-  ee.textContent = emoji;
-
-  var ne = document.createElement('div');
-  ne.className = 'animal-name';
-  ne.textContent = name;
-
-  card.appendChild(ee);
-  card.appendChild(ne);
-  card.dataset.pts   = sizeToPoints(sz);
-  card.dataset.emoji = emoji;
-
-  card.addEventListener('pointerdown', tapCard);
-  card.addEventListener('animationend', function() {
-    if (card.parentNode) card.parentNode.removeChild(card);
-  });
-
-  byId('game-container').appendChild(card);
-}
-
-function pickSize() {
-  var r = Math.random();
-  return r < 0.15 ? 95 + rnd(20) : r < 0.55 ? 65 + rnd(20) : 46 + rnd(14);
-}
-function sizeToPoints(s) { return s >= 95 ? 1 : s >= 65 ? 3 : 5; }
-
-// ── タップ ────────────────────────────────────────
-function tapCard(e) {
-  e.stopPropagation();
-  if (!running) return;
-  var card = this;
-  card.removeEventListener('pointerdown', tapCard);
-  var rect = card.getBoundingClientRect();
-  var cx = rect.left + rect.width / 2;
-  var cy = rect.top  + rect.height / 2;
-  if (card.parentNode) card.parentNode.removeChild(card);
-
-  combo++;
-  clearTimeout(comboTimer);
-  comboTimer = setTimeout(function() { combo = 0; hideCombo(); }, 1200);
-
-  var mult = combo >= 5 ? 3 : combo >= 3 ? 2 : 1;
-  var pts  = parseInt(card.dataset.pts) * mult;
-  score += pts;
-  setText('score', '' + score);
-
-  showStars(cx, cy);
-  showPts(cx, cy, pts, combo);
-  beep(440 + combo * 40, 0.18);
-
-  if (combo >= 3) {
-    var ct = byId('combo-text');
-    ct.textContent = combo >= 10 ? '🔥' + combo + 'コンボ！！' : combo >= 5 ? '✨' + combo + 'コンボ！' : combo + 'コンボ';
-    ct.style.display = 'block';
-    if (combo % 3 === 0) { beep(523,0.1); beep(659,0.1); beep(784,0.1); }
-  }
-}
-
-function hideCombo() { byId('combo-text').style.display = 'none'; }
-
-function showStars(cx, cy) {
-  var cont = byId('game-container');
-  for (var i = 0; i < 6; i++) {
-    var el = document.createElement('div');
-    el.className = 'pop-star';
-    el.textContent = STARS[rnd(STARS.length)];
-    var a = Math.PI * 2 * i / 6 + Math.random() * 0.4;
-    var d = 35 + Math.random() * 45;
-    el.style.left = (cx - 10) + 'px';
-    el.style.top  = (cy - 10) + 'px';
-    el.style.setProperty('--dx', (Math.cos(a) * d) + 'px');
-    el.style.setProperty('--dy', (Math.sin(a) * d - 15) + 'px');
-    cont.appendChild(el);
-    (function(e) { e.addEventListener('animationend', function() { if(e.parentNode) e.parentNode.removeChild(e); }); })(el);
-  }
-}
-
-function showPts(cx, cy, pts, c) {
-  var el = document.createElement('div');
-  el.className = 'score-pop';
-  el.textContent = '+' + pts + (c >= 5 ? ' x3🔥' : c >= 3 ? ' x2✨' : '');
-  el.style.left = (cx - 20) + 'px';
-  el.style.top  = (cy - 32) + 'px';
-  if (c >= 3) el.style.color = c >= 5 ? '#FF0000' : '#FF9F00';
-  byId('game-container').appendChild(el);
-  el.addEventListener('animationend', function() { if(el.parentNode) el.parentNode.removeChild(el); });
-}
-
-// ── ユーティリティ ────────────────────────────────
-function byId(id) { return document.getElementById(id); }
-function setText(id, t) { byId(id).textContent = t; }
-function rnd(n) { return Math.floor(Math.random() * n); }
-
-// ── ボタン設定 ────────────────────────────────────
-byId('btn-start').onclick = startGame;
-byId('btn-retry').onclick = startGame;
-byId('btn-home').onclick  = showTitle;
-</script>
 </body>
 </html>
