@@ -1,416 +1,1462 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>どうぶつタッチ！</title>
-  <style>
-    * {
-      margin: 0; padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: #87CEEB;
-      font-family: Arial, sans-serif;
-    }
-    #game-container {
-      position: relative;
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: linear-gradient(180deg, #87CEEB 0%, #C8F0FF 100%);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowl - 専門知識をシェアする</title>
+<style>
+  :root {
+    --bg: #f2f4f7;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --text: #14161a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --primary: #2563eb;
+    --primary-weak: #eaf0ff;
+    --verified: #1d9bf0;
+    --q: #ea8a00;
+    --q-weak: #fff4e2;
+    --a: #7c3aed;
+    --a-weak: #f2ecfe;
+    --danger: #dc2626;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --gap: 14px;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.05);
+    --maxw: 640px;
+    --tabbar-h: 60px;
+  }
 
-    /* HUD */
-    #hud {
-      position: absolute; top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.6);
-    }
-    .hud-box {
-      background: white; border-radius: 16px;
-      padding: 4px 14px; text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      min-width: 80px;
-    }
-    .hud-label { font-size: 10px; color: #999; font-weight: bold; }
-    #score { font-size: 26px; font-weight: bold; color: #FF5555; }
-    #timer { font-size: 26px; font-weight: bold; color: #44BBAA; }
-    #timer.urgent { color: #FF0000; }
-    #level-badge {
-      background: #FFD700; color: white;
-      border-radius: 50%; width: 44px; height: 44px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    #level-num { font-size: 16px; line-height: 1; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    /* 動物カード */
-    .animal-card {
-      position: absolute;
-      top: 100%;
-      border-radius: 16px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background: white;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      padding: 4px;
-      cursor: pointer;
-      touch-action: manipulation;
-      animation: jumpIn ease-out forwards;
-    }
-    .animal-emoji { line-height: 1; }
-    .animal-name  { font-size: 11px; font-weight: bold; color: #555; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
 
-    @keyframes jumpIn {
-      0%   { transform: translateY(0) scale(0.4); opacity: 0; }
-      12%  { transform: translateY(-30vh) scale(1.1); opacity: 1; }
-      20%  { transform: translateY(-26vh) scale(0.96); }
-      28%  { transform: translateY(-30vh) scale(1); }
-      85%  { transform: translateY(-120vh) scale(1); opacity: 1; }
-      100% { transform: translateY(-128vh) scale(1); opacity: 0; }
-    }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { background: none; border: none; cursor: pointer; }
+  a { color: var(--primary); }
 
-    /* エフェクト */
-    .pop-star {
-      position: absolute; pointer-events: none;
-      z-index: 200; font-size: 20px;
-      animation: starFly 0.7s ease-out forwards;
-    }
-    @keyframes starFly {
-      0%   { transform: translate(0,0) scale(0.5); opacity: 1; }
-      100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
-    }
-    .score-pop {
-      position: absolute; pointer-events: none;
-      font-size: 20px; font-weight: bold;
-      color: #FF5555; z-index: 201;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-      animation: scoreFly 0.8s ease-out forwards;
-    }
-    @keyframes scoreFly {
-      0%   { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-60px); opacity: 0; }
-    }
-    #combo-text {
-      position: absolute; top: 72px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 150; font-size: 24px; font-weight: bold;
-      color: #FF5555; text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
-      pointer-events: none;
-      display: none; white-space: nowrap;
-    }
+  /* ---------- Shell ---------- */
+  #app {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 0 1px var(--border);
+  }
 
-    /* 草 */
-    #grass {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: 55px;
-      background: linear-gradient(#7EC850, #5BA032);
-      z-index: 50;
-    }
+  #topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--border);
+    min-height: 56px;
+  }
+  .brand { display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 18px; letter-spacing: .2px; }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: #fff; font-size: 14px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topbar-title { font-weight: 700; font-size: 16px; flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spacer { flex: 1; }
 
-    /* オーバーレイ画面 */
-    .overlay {
-      position: absolute; inset: 0; z-index: 300;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(100,180,230,0.92);
-    }
-    .card {
-      background: white; border-radius: 24px;
-      padding: 30px 28px; text-align: center;
-      width: 88%; max-width: 310px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-    }
-    .card-title { font-size: 36px; margin-bottom: 6px; }
-    .card-sub   { font-size: 15px; color: #888; margin-bottom: 12px; }
-    .card-info  { font-size: 13px; color: #666; line-height: 1.9; margin-bottom: 18px; }
-    .btn {
-      display: block; width: 100%;
-      padding: 16px; margin-top: 10px;
-      border: none; border-radius: 16px;
-      font-size: 20px; font-weight: bold;
-      cursor: pointer;
-      touch-action: manipulation;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .btn-orange { background: #FF6B3B; color: white; }
-    .btn-teal   { background: #3BBFB0; color: white; }
-    .result-pts { font-size: 52px; font-weight: bold; color: #FF5555; }
-    .result-sub { font-size: 13px; color: #aaa; margin-top: 4px; }
-    .medal      { font-size: 44px; margin: 6px 0; }
-  </style>
+  .iconbtn {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text); flex: none;
+  }
+  .iconbtn:hover { background: var(--surface-2); }
+
+  .account-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 4px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 12px; font-weight: 600; flex: none;
+  }
+  .account-btn .avatar { width: 26px; height: 26px; font-size: 15px; }
+
+  main { flex: 1; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 8px); }
+
+  #tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+    max-width: var(--maxw); margin: 0 auto;
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: rgba(255,255,255,.96);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-top: 1px solid var(--border);
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; font-size: 10px; font-weight: 600; color: var(--muted);
+    position: relative;
+  }
+  .tab.active { color: var(--primary); }
+  .tab-badge {
+    position: absolute; top: 6px; left: 50%; margin-left: 3px;
+    min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 999px; background: var(--danger); color: #fff;
+    font-size: 10px; font-weight: 700; line-height: 17px; text-align: center;
+  }
+  .tab-compose svg { color: #fff; }
+  .tab-compose .compose-dot {
+    width: 30px; height: 30px; border-radius: 10px;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- Common bits ---------- */
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 21px; flex: none; line-height: 1;
+  }
+  .avatar.lg { width: 66px; height: 66px; font-size: 34px; }
+
+  .verified-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 50%;
+    background: var(--verified); color: #fff; flex: none;
+    vertical-align: -2px;
+  }
+  .verified-badge svg { width: 10px; height: 10px; }
+
+  .name-line { display: flex; align-items: center; gap: 4px; min-width: 0; flex-wrap: wrap; }
+  .name { font-weight: 700; font-size: 14px; }
+  .handle, .meta { color: var(--muted); font-size: 12px; }
+
+  .chip-row {
+    display: flex; gap: 7px; overflow-x: auto; padding: 10px 14px;
+    scrollbar-width: none;
+  }
+  .chip-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap;
+  }
+  .chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .segment {
+    display: flex; background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 56px; z-index: 20;
+  }
+  .segment button {
+    flex: 1; padding: 12px 0; font-size: 14px; font-weight: 700; color: var(--muted);
+    border-bottom: 2.5px solid transparent;
+  }
+  .segment button.active { color: var(--text); border-bottom-color: var(--primary); }
+
+  .sortbar { display: flex; gap: 8px; padding: 0 14px 6px; align-items: center; }
+  .sortbar .lbl { font-size: 12px; color: var(--muted); margin-right: auto; }
+  .sortbtn { font-size: 12px; font-weight: 700; color: var(--muted); padding: 4px 9px; border-radius: 999px; }
+  .sortbtn.active { color: var(--primary); background: var(--primary-weak); }
+
+  .list { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px 20px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px;
+  }
+  .card.tappable:active { background: var(--surface-2); }
+
+  .kind {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;
+  }
+  .kind.question { background: var(--q-weak); color: var(--q); }
+  .kind.article { background: var(--a-weak); color: var(--a); }
+  .kind.solved { background: #e7f8ef; color: #067647; }
+
+  .post-head { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+  .post-title { font-size: 16px; font-weight: 700; line-height: 1.5; margin: 4px 0 6px; }
+  .post-excerpt { color: #4b5563; font-size: 13.5px; line-height: 1.75;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .post-body { font-size: 15px; line-height: 1.9; white-space: normal; word-break: break-word; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag {
+    font-size: 11.5px; font-weight: 600; color: var(--muted);
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 6px;
+  }
+
+  .post-foot { display: flex; align-items: center; gap: 16px; margin-top: 11px;
+    padding-top: 10px; border-top: 1px solid var(--border); }
+  .stat { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px;
+    font-weight: 600; color: var(--muted); }
+  .stat svg { width: 15px; height: 15px; }
+  .stat.on { color: var(--danger); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+    background: var(--primary); color: #fff; border: 1px solid var(--primary);
+  }
+  .btn:disabled { opacity: .45; }
+  .btn.ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .btn.sm { padding: 6px 13px; font-size: 12.5px; }
+  .btn.block { width: 100%; padding: 13px; font-size: 15px; border-radius: 12px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 48px 24px; font-size: 14px; }
+  .empty .big { font-size: 34px; display: block; margin-bottom: 10px; }
+
+  .section-title { font-size: 13px; font-weight: 800; color: var(--muted);
+    padding: 18px 14px 6px; letter-spacing: .04em; }
+
+  /* ---------- Forms ---------- */
+  .field { padding: 0 14px 14px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .field input[type=text], .field textarea, .field select {
+    width: 100%; padding: 11px 13px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 15px; line-height: 1.7; outline: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--primary); }
+  .field textarea { resize: vertical; min-height: 170px; }
+  .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+
+  .typeswitch { display: flex; gap: 10px; padding: 14px; }
+  .typecard {
+    flex: 1; border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 12px; text-align: left; background: var(--surface);
+  }
+  .typecard.active { border-color: var(--primary); background: var(--primary-weak); }
+  .typecard .t { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .typecard .d { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.6; }
+
+  /* ---------- Replies ---------- */
+  .reply {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 13px; box-shadow: var(--shadow);
+  }
+  .reply.best { border-color: #a7e8c6; background: #f4fdf8; }
+  .best-flag { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px;
+    font-weight: 800; color: #067647; margin-bottom: 7px; }
+  .reply-body { font-size: 14px; line-height: 1.85; margin-top: 8px; word-break: break-word; }
+  .reply-foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+
+  /* ---------- Profile ---------- */
+  .profile-head { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 16px; }
+  .profile-top { display: flex; align-items: flex-start; gap: 14px; }
+  .profile-name { font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .verified-note {
+    margin-top: 12px; background: #eff8ff; border: 1px solid #d1e9ff;
+    border-radius: 11px; padding: 10px 12px; font-size: 12.5px; color: #175cd3; line-height: 1.7;
+  }
+  .counts { display: flex; gap: 20px; margin-top: 13px; }
+  .counts b { font-size: 15px; }
+  .counts span { font-size: 12.5px; color: var(--muted); }
+  .fields { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+  .fieldtag { font-size: 11.5px; font-weight: 700; color: var(--primary);
+    background: var(--primary-weak); padding: 3px 9px; border-radius: 7px; }
+
+  .expert-card { display: flex; align-items: flex-start; gap: 12px; }
+  .expert-card .col { flex: 1; min-width: 0; }
+  .expert-bio { font-size: 12.5px; color: var(--muted); margin-top: 3px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* ---------- Notifications ---------- */
+  .noti { display: flex; gap: 11px; align-items: flex-start; padding: 13px 14px;
+    background: var(--surface); border-bottom: 1px solid var(--border); width: 100%; text-align: left; }
+  .noti.unread { background: #f5f9ff; }
+  .noti-text { flex: 1; font-size: 13.5px; line-height: 1.65; }
+  .noti-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex: none; margin-top: 7px; }
+
+  /* ---------- Sheet ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 60; background: rgba(16,24,40,.42);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .sheet {
+    width: 100%; max-width: var(--maxw); background: var(--surface);
+    border-radius: 18px 18px 0 0; padding: 8px 0 calc(18px + env(safe-area-inset-bottom, 0px));
+    max-height: 78vh; overflow-y: auto;
+  }
+  .sheet-grip { width: 38px; height: 4px; border-radius: 2px; background: var(--border); margin: 8px auto 12px; }
+  .sheet-title { font-size: 15px; font-weight: 800; padding: 0 18px 4px; }
+  .sheet-sub { font-size: 12px; color: var(--muted); padding: 0 18px 12px; line-height: 1.6; }
+  .sheet-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 18px; text-align: left; }
+  .sheet-item:active { background: var(--surface-2); }
+  .sheet-item.current { background: var(--primary-weak); }
+
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(var(--tabbar-h) + 20px); z-index: 80;
+    background: #14161a; color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    white-space: nowrap; max-width: calc(100% - 40px);
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
+  @media (min-width: 700px) {
+    #app { box-shadow: 0 0 0 1px var(--border), 0 8px 40px rgba(16,24,40,.06); }
+  }
+</style>
 </head>
 <body>
-<div id="game-container">
-  <div id="grass"></div>
 
-  <div id="hud">
-    <div class="hud-box">
-      <div class="hud-label">スコア</div>
-      <div id="score">0</div>
-    </div>
-    <div id="level-badge">
-      <div style="font-size:8px">Lv</div>
-      <div id="level-num">1</div>
-    </div>
-    <div class="hud-box">
-      <div class="hud-label">のこり</div>
-      <div id="timer">60</div>
-    </div>
-  </div>
-
-  <div id="combo-text"></div>
-
-  <!-- スタート -->
-  <div class="overlay" id="start-screen">
-    <div class="card">
-      <div class="card-title">🐾 どうぶつタッチ！</div>
-      <div class="card-sub">でてきた どうぶつを タッチ！</div>
-      <div class="card-info">
-        🐶 どうぶつが とびだすよ！<br>
-        ⭐ ちいさいほど こうとく！<br>
-        ✨ つづけると ボーナス！<br>
-        ⏰ 60びょうで がんばろう！
-      </div>
-      <button class="btn btn-orange" id="btn-start">▶ あそぶ！</button>
-    </div>
-  </div>
-
-  <!-- ゲームオーバー -->
-  <div class="overlay" id="end-screen" style="display:none">
-    <div class="card">
-      <div class="medal" id="end-medal">🥇</div>
-      <div class="result-pts" id="end-score">0</div>
-      <div class="result-sub" id="end-best">ベスト: 0</div>
-      <button class="btn btn-teal" id="btn-retry">🔄 もう一度！</button>
-      <button class="btn btn-orange" id="btn-home" style="margin-top:8px">🏠 タイトルへ</button>
-    </div>
-  </div>
+<div id="app">
+  <header id="topbar"></header>
+  <main id="view"></main>
+  <nav id="tabbar"></nav>
 </div>
+<div id="layer"></div>
 
 <script>
-// ── 定数 ──────────────────────────────────────────
-var GAME_TIME = 60;
-var ANIMALS = [
-  '🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁',
-  '🐮','🐷','🐸','🐵','🐔','🐧','🦆','🦋','🐢','🐬',
-  '🦓','🦒','🐘','🦜','🦔','🐇','🦉','🐺','🐴','🦕'
-];
-var NAMES = {
-  '🐶':'いぬ','🐱':'ねこ','🐭':'ねずみ','🐰':'うさぎ','🦊':'きつね',
-  '🐻':'くま','🐼':'パンダ','🐨':'コアラ','🐯':'とら','🦁':'らいおん',
-  '🐮':'うし','🐷':'ぶた','🐸':'かえる','🐵':'さる','🐔':'にわとり',
-  '🐧':'ペンギン','🦆':'あひる','🦋':'ちょうちょ','🐢':'かめ','🐬':'いるか',
-  '🦓':'しまうま','🦒':'きりん','🐘':'ぞう','🦜':'おうむ','🦔':'ハリネズミ',
-  '🐇':'うさぎ','🦉':'ふくろう','🐺':'おおかみ','🐴':'うま','🦕':'きょうりゅう'
+"use strict";
+
+/* =====================================================================
+   Knowl — 専門知識シェアプラットフォーム（プロトタイプ）
+
+   構成は3層。層をまたいだ直接アクセスはしない。
+     Store   : データの保存と読み出し（localStorage）。ここだけを
+               将来 Supabase クライアントに差し替えれば本番化できる。
+     Actions : 業務ロジック。通知レコードの生成もここに集約する。
+     View    : 描画。state.route を見て画面を組み立て直すだけ。
+   ===================================================================== */
+
+/* ---------------------------------------------------------------
+   ユーティリティ
+   --------------------------------------------------------------- */
+
+function uid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+
+// ユーザー入力は必ずここを通してから innerHTML に載せる。
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function escMultiline(s) {
+  return esc(s).replace(/\n/g, "<br>");
+}
+
+function excerpt(s, n) {
+  const flat = String(s || "").replace(/\s+/g, " ").trim();
+  return flat.length > n ? flat.slice(0, n) + "…" : flat;
+}
+
+function timeAgo(ts) {
+  const sec = Math.floor((Date.now() - ts) / 1000);
+  if (sec < 60) return "たった今";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min + "分前";
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + "時間前";
+  const day = Math.floor(hr / 24);
+  if (day < 30) return day + "日前";
+  const mon = Math.floor(day / 30);
+  if (mon < 12) return mon + "ヶ月前";
+  return Math.floor(mon / 12) + "年前";
+}
+
+const ICON = {
+  home: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>',
+  users: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  plus: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  bell: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  user: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>',
+  back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+  heartFill: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.5-4.4A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  award: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.2 13.9 7 22l5-3 5 3-1.2-8.1"/></svg>',
+  switchIcon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l4 4-4 4"/><path d="M20 7H4"/><path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/></svg>'
 };
-var BORDERS = ['#FF6B6B','#FFD700','#4ECDC4','#FF9F7F','#C77DFF','#5BC8F5','#FF85A2','#7EC850'];
-var STARS   = ['⭐','✨','💛','💚','💙','🧡','❤️','💜'];
 
-// ── 状態 ──────────────────────────────────────────
-var score = 0, timeLeft = GAME_TIME, level = 1;
-var combo = 0, comboTimer = null;
-var timerInt = null, spawnTO = null;
-var running = false;
-var bestScore = 0;
-try { bestScore = parseInt(localStorage.getItem('ab2') || '0') || 0; } catch(e){}
-
-// ── オーディオ ────────────────────────────────────
-var actx = null;
-function beep(freq, dur) {
-  try {
-    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-    if (actx.state === 'suspended') actx.resume();
-    var o = actx.createOscillator(), g = actx.createGain();
-    o.connect(g); g.connect(actx.destination);
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(0.2, actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
-    o.start(); o.stop(actx.currentTime + dur);
-  } catch(e) {}
+function verifiedMark() {
+  return '<span class="verified-badge" title="専門家認定">' + ICON.check + '</span>';
 }
 
-// ── ゲーム制御 ────────────────────────────────────
-function startGame() {
-  score = 0; timeLeft = GAME_TIME; level = 1; combo = 0; running = true;
-  setText('score', '0');
-  setText('timer', '' + GAME_TIME);
-  byId('timer').className = '';
-  setText('level-num', '1');
-  byId('combo-text').style.display = 'none';
-  byId('start-screen').style.display = 'none';
-  byId('end-screen').style.display = 'none';
-  removeCards();
-  clearInterval(timerInt);
-  clearTimeout(spawnTO);
-  timerInt = setInterval(tick, 1000);
-  spawn();
+/* ---------------------------------------------------------------
+   Store — データ層
+   localStorage への読み書きはこの中だけで行う。
+   --------------------------------------------------------------- */
+
+const STORAGE_KEY = "knowl.v1";
+
+const CATEGORIES = [
+  { id: "it",      name: "IT・エンジニアリング", emoji: "💻" },
+  { id: "med",     name: "医療・健康",           emoji: "🩺" },
+  { id: "law",     name: "法律・税務",           emoji: "⚖️" },
+  { id: "food",    name: "料理",                 emoji: "🍳" },
+  { id: "edu",     name: "教育",                 emoji: "📚" },
+  { id: "design",  name: "デザイン",             emoji: "🎨" },
+  { id: "finance", name: "金融・投資",           emoji: "💹" },
+  { id: "agri",    name: "農業・園芸",           emoji: "🌱" }
+];
+
+const Store = {
+  data: null,
+
+  load() {
+    let raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.users) && parsed.users.length) {
+          this.data = parsed;
+          this.data.categories = CATEGORIES; // カテゴリ定義は常に最新を使う
+          return this.data;
+        }
+      } catch (e) { /* 壊れていたら作り直す */ }
+    }
+    this.data = buildSeed();
+    this.save();
+    return this.data;
+  },
+
+  save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); }
+    catch (e) { /* プライベートモード等では保存できないが動作は継続する */ }
+  },
+
+  reset() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    this.data = buildSeed();
+    this.save();
+    return this.data;
+  },
+
+  /* --- 参照ヘルパー（読み取り専用） --- */
+  users()          { return this.data.users; },
+  categories()     { return this.data.categories; },
+  posts()          { return this.data.posts; },
+  replies()        { return this.data.replies; },
+  follows()        { return this.data.follows; },
+  notifications()  { return this.data.notifications; },
+
+  me()             { return this.user(this.data.currentUserId); },
+  user(id)         { return this.data.users.find(u => u.id === id) || null; },
+  post(id)         { return this.data.posts.find(p => p.id === id) || null; },
+  reply(id)        { return this.data.replies.find(r => r.id === id) || null; },
+  category(id)     { return this.data.categories.find(c => c.id === id) || null; },
+
+  repliesOf(postId) {
+    return this.data.replies
+      .filter(r => r.postId === postId)
+      .sort((a, b) => a.createdAt - b.createdAt);
+  },
+  postsBy(userId) {
+    return this.data.posts
+      .filter(p => p.authorId === userId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+  },
+  isFollowing(followerId, followeeId) {
+    return this.data.follows.some(f => f.followerId === followerId && f.followeeId === followeeId);
+  },
+  followingCount(userId) { return this.data.follows.filter(f => f.followerId === userId).length; },
+  followerCount(userId)  { return this.data.follows.filter(f => f.followeeId === userId).length; },
+  followingIds(userId)   { return this.data.follows.filter(f => f.followerId === userId).map(f => f.followeeId); },
+
+  myNotifications() {
+    return this.data.notifications
+      .filter(n => n.userId === this.data.currentUserId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+  },
+  unreadCount() {
+    return this.data.notifications.filter(n => n.userId === this.data.currentUserId && !n.read).length;
+  }
+};
+
+/* ---------------------------------------------------------------
+   Actions — ロジック層
+   状態を変える操作はすべてここを通す。通知の生成もここで行う。
+   --------------------------------------------------------------- */
+
+const Actions = {
+  notify(userId, type, actorId, postId) {
+    if (userId === actorId) return; // 自分の行動は自分に通知しない
+    Store.data.notifications.push({
+      id: uid(), userId, type, actorId,
+      postId: postId || null, createdAt: Date.now(), read: false
+    });
+  },
+
+  switchUser(userId) {
+    if (!Store.user(userId)) return;
+    Store.data.currentUserId = userId;
+    Store.save();
+  },
+
+  toggleFollow(targetId) {
+    const meId = Store.data.currentUserId;
+    if (meId === targetId) return;
+    const i = Store.data.follows.findIndex(f => f.followerId === meId && f.followeeId === targetId);
+    if (i >= 0) {
+      Store.data.follows.splice(i, 1);
+    } else {
+      Store.data.follows.push({ followerId: meId, followeeId: targetId });
+      this.notify(targetId, "follow", meId, null);
+    }
+    Store.save();
+  },
+
+  toggleLikePost(postId) {
+    const meId = Store.data.currentUserId;
+    const post = Store.post(postId);
+    if (!post) return;
+    const i = post.likes.indexOf(meId);
+    if (i >= 0) post.likes.splice(i, 1);
+    else { post.likes.push(meId); this.notify(post.authorId, "like", meId, post.id); }
+    Store.save();
+  },
+
+  toggleLikeReply(replyId) {
+    const meId = Store.data.currentUserId;
+    const reply = Store.reply(replyId);
+    if (!reply) return;
+    const i = reply.likes.indexOf(meId);
+    if (i >= 0) reply.likes.splice(i, 1);
+    else { reply.likes.push(meId); this.notify(reply.authorId, "like", meId, reply.postId); }
+    Store.save();
+  },
+
+  createPost(draft) {
+    const post = {
+      id: uid(),
+      type: draft.type === "article" ? "article" : "question",
+      authorId: Store.data.currentUserId,
+      title: String(draft.title || "").trim(),
+      body: String(draft.body || "").trim(),
+      categoryId: draft.categoryId,
+      tags: String(draft.tags || "")
+        .split(/[,、\s]+/).map(t => t.replace(/^#/, "").trim())
+        .filter(Boolean).slice(0, 5),
+      createdAt: Date.now(),
+      likes: [],
+      bestReplyId: null
+    };
+    Store.data.posts.push(post);
+    Store.save();
+    return post;
+  },
+
+  addReply(postId, body) {
+    const text = String(body || "").trim();
+    const post = Store.post(postId);
+    if (!post || !text) return null;
+    const reply = {
+      id: uid(), postId, authorId: Store.data.currentUserId,
+      body: text, createdAt: Date.now(), likes: []
+    };
+    Store.data.replies.push(reply);
+    this.notify(post.authorId, "reply", reply.authorId, postId);
+    Store.save();
+    return reply;
+  },
+
+  selectBest(postId, replyId) {
+    const post = Store.post(postId);
+    if (!post || post.type !== "question") return;
+    if (post.authorId !== Store.data.currentUserId) return; // 質問者本人だけが選べる
+    const reply = Store.reply(replyId);
+    if (!reply || reply.postId !== postId) return;
+    post.bestReplyId = (post.bestReplyId === replyId) ? null : replyId;
+    if (post.bestReplyId) this.notify(reply.authorId, "best", post.authorId, postId);
+    Store.save();
+  }
+};
+
+/* ---------------------------------------------------------------
+   シードデータ
+   初見でも世界観が伝わるよう、認定専門家と実際の投稿を入れておく。
+   --------------------------------------------------------------- */
+
+function buildSeed() {
+  const MIN = 60 * 1000, HOUR = 60 * MIN, DAY = 24 * HOUR;
+  const now = Date.now();
+  const ago = ms => now - ms;
+
+  const users = [
+    { id: "u_me", name: "あなた", handle: "you", emoji: "🙂", verified: false, fields: [],
+      bio: "いろいろな分野の話を聞いてみたい人。", verifiedNote: "", joinedAt: ago(40 * DAY) },
+    { id: "u_tanaka", name: "田中 悠介", handle: "yusuke_dev", emoji: "👨‍💻", verified: true, fields: ["it"],
+      bio: "Webアプリを12年作っています。個人開発の相談によく乗ります。",
+      verifiedNote: "Webアプリケーション開発12年。前職では大手SIerでテックリードを担当。", joinedAt: ago(400 * DAY) },
+    { id: "u_sato", name: "佐藤 みなみ", handle: "minami_md", emoji: "👩‍⚕️", verified: true, fields: ["med"],
+      bio: "内科医。「これ受診すべき？」の判断材料を書いています。",
+      verifiedNote: "内科医。総合病院での臨床9年。医師免許を確認済み。", joinedAt: ago(310 * DAY) },
+    { id: "u_kimura", name: "木村 拓也", handle: "takuya_tax", emoji: "🧑‍⚖️", verified: true, fields: ["law", "finance"],
+      bio: "税理士。フリーランスと小さな会社のお金まわりが専門です。",
+      verifiedNote: "税理士。中小企業・個人事業主の顧問を約30社担当。登録番号を確認済み。", joinedAt: ago(280 * DAY) },
+    { id: "u_ishida", name: "石田 果穂", handle: "kaho_kitchen", emoji: "👩‍🍳", verified: true, fields: ["food"],
+      bio: "フレンチ出身の料理人。家庭のコンロで再現できる方法だけ書きます。",
+      verifiedNote: "調理師。フレンチレストランで7年、現在はレシピ開発。", joinedAt: ago(200 * DAY) },
+    { id: "u_nakamura", name: "中村 亮", handle: "ryo_teacher", emoji: "🧑‍🏫", verified: true, fields: ["edu"],
+      bio: "高校で数学を教えて16年。学び直しの相談も歓迎です。",
+      verifiedNote: "高等学校教諭(数学)16年。教員免許を確認済み。", joinedAt: ago(150 * DAY) },
+    { id: "u_hayashi", name: "林 さくら", handle: "sakura_ux", emoji: "👩‍🎨", verified: true, fields: ["design"],
+      bio: "UXデザイナー。「なんかダサい」を言語化するのが仕事です。",
+      verifiedNote: "UXデザイナー11年。事業会社でデザイン組織の立ち上げを2社経験。", joinedAt: ago(120 * DAY) },
+    { id: "u_ogawa", name: "小川 健一", handle: "kenichi_farm", emoji: "👨‍🌾", verified: true, fields: ["agri"],
+      bio: "有機農家18年目。ベランダ菜園の質問もどうぞ。",
+      verifiedNote: "有機農業18年。露地野菜の生産・出荷。農業者登録を確認済み。", joinedAt: ago(95 * DAY) },
+    { id: "u_mori", name: "森 由紀", handle: "yuki_note", emoji: "🧑", verified: false, fields: ["finance"],
+      bio: "個人投資家。勉強しながら記録を残しています。", verifiedNote: "", joinedAt: ago(60 * DAY) }
+  ];
+
+  const P = [];
+  function post(o) { P.push(Object.assign({ likes: [], bestReplyId: null, tags: [] }, o)); return o.id; }
+
+  post({ id: "p1", type: "question", authorId: "u_me", categoryId: "it",
+    title: "個人開発のWebサービス、公開前に最低限やるべきセキュリティ対策は？",
+    body: "はじめて自分でWebサービスを作って、そろそろ公開しようとしています。\nお金は扱いませんが、メールアドレスとパスワードは預かります。\n\n「最低限これだけはやっておけ」という項目を、優先順位つきで教えてほしいです。専門ではないので、難しい対策を全部やる体力はありません。",
+    tags: ["セキュリティ", "個人開発"], createdAt: ago(3 * DAY), likes: ["u_hayashi", "u_mori"], bestReplyId: "r1" });
+
+  post({ id: "p2", type: "article", authorId: "u_sato", categoryId: "med",
+    title: "「とりあえず様子を見る」が許される症状と、すぐ受診すべき症状の線引き",
+    body: "外来にいると、「もっと早く来てくれれば」と思う人と、「これは家で休めばよかったのに」と思う人が、ほぼ同じ数だけ来ます。\n\n判断の軸はシンプルで、次の3つのどれかに当てはまるなら、迷わず受診してください。\n\n1. 症状が「今までに経験がないほど強い」\n頭痛でも腹痛でも、本人が人生で一番と感じる強さなら、それだけで受診の理由になります。\n\n2. 数時間から数日で、はっきり悪くなっている\n同じ強さで続いているものより、坂を下っている途中のほうが危険です。\n\n3. いつもと違う機能が落ちている\n呂律が回らない、片側だけ力が入らない、息が浅い、意識がぼんやりする。痛みより、こちらのほうがずっと重要です。\n\n逆に、強さが変わらず、食事と睡眠がとれていて、日常生活が送れているなら、数日様子を見るのは妥当な選択です。",
+    tags: ["受診の目安", "内科"], createdAt: ago(5 * HOUR), likes: ["u_me", "u_tanaka", "u_kimura", "u_hayashi", "u_nakamura", "u_mori"] });
+
+  post({ id: "p3", type: "question", authorId: "u_mori", categoryId: "finance",
+    title: "新NISAのつみたて投資枠、途中で銘柄を変えるのはアリですか？",
+    body: "去年から積立を始めたのですが、あとから信託報酬がもっと安いファンドがあることを知りました。\n\n今のファンドを売って乗り換えるべきか、今のものは置いたまま新規の積立だけ変えるべきか、判断がつきません。",
+    tags: ["NISA", "投資信託"], createdAt: ago(1 * DAY), likes: ["u_me"] });
+
+  post({ id: "p4", type: "article", authorId: "u_tanaka", categoryId: "it",
+    title: "レビューで「読みやすい」と言われるコードが、実は読みにくい理由",
+    body: "「読みやすいコード」を目指すと、多くの人は行数を減らしにいきます。これがだいたい間違いのはじまりです。\n\n読み手が本当に困るのは、行数の多さではなく「どこを読めば答えがあるか分からない」状態です。短く書かれた賢いコードは、一行の中に判断が3つ詰まっていて、読み手はその全部を頭の中で展開しなければいけません。\n\n私が今レビューで見ているのは、次の一点だけです。\n\n**この関数を、上から下に一度読むだけで、何が起きるか説明できるか。**\n\n途中で別ファイルに飛ばないと意味が分からないなら、それは分割の失敗です。同じ画面の中に戻ってこられる範囲で分けるのが、ちょうどいい粒度でした。",
+    tags: ["コードレビュー", "設計"], createdAt: ago(2 * DAY), likes: ["u_me", "u_ishida", "u_hayashi"] });
+
+  post({ id: "p5", type: "question", authorId: "u_me", categoryId: "food",
+    title: "家庭のコンロで、ステーキを店みたいに焼くコツはありますか？",
+    body: "同じ肉を買ってきても、外は黒く焦げて中は生、みたいになってしまいます。\n火力が足りないのが原因かと思っているのですが、家庭のコンロでもどうにかなるものでしょうか。",
+    tags: ["ステーキ", "焼き方"], createdAt: ago(6 * DAY), likes: ["u_mori"], bestReplyId: "r5" });
+
+  post({ id: "p6", type: "article", authorId: "u_kimura", categoryId: "law",
+    title: "フリーランスが開業届を出す前に知っておきたい3つのこと",
+    body: "開業届そのものは、出すだけならA4一枚、15分で終わります。相談が多いのは、その前後の話です。\n\n**1. 出さなくても罰則はない。ただし青色申告はできない**\n最大65万円の控除が使えるかどうかが、実質的な差になります。開業届と青色申告承認申請書は、セットで出すものだと考えてください。\n\n**2. 屋号は後から変えられる**\n悩んで提出が遅れるくらいなら、空欄でも構いません。\n\n**3. 失業給付との関係を先に確認する**\n会社を辞めた直後に開業届を出すと、失業給付の対象から外れることがあります。順番を間違えると取り返しがつかないので、ここだけは先に確認してください。",
+    tags: ["開業届", "確定申告"], createdAt: ago(4 * DAY), likes: ["u_me", "u_tanaka", "u_mori", "u_ishida"] });
+
+  post({ id: "p7", type: "question", authorId: "u_hayashi", categoryId: "edu",
+    title: "大人が数学を学び直すとき、どこから始めるのが挫折しにくいですか？",
+    body: "仕事で統計を扱うようになり、高校数学からやり直したくなりました。\nただ、教科書を最初から順にやると確実に飽きる自信があります。おすすめの入り方はありますか。",
+    tags: ["学び直し", "数学"], createdAt: ago(8 * HOUR), likes: ["u_me", "u_mori"], bestReplyId: "r7" });
+
+  post({ id: "p8", type: "article", authorId: "u_ishida", categoryId: "food",
+    title: "玉ねぎを「飴色」にする時間を、半分にする方法",
+    body: "飴色玉ねぎに40分かかる、というのは本当ですが、家庭でそこまで待てる日はそんなにありません。\n\n短縮の鍵は水分です。切った玉ねぎに塩をひとつまみ振って5分置くと、細胞から水が出ます。この状態で強めの中火にかけると、最初の10分でほとんどの水分が飛び、そこから一気に色がつきます。\n\nもうひとつ、途中で焦げそうになったら水を大さじ1入れて、鍋底についた茶色をこそげてください。あの茶色が甘みと香りの正体なので、捨てずに玉ねぎに戻すのが大事です。\n\nこの2つで、私の場合は18分前後になります。",
+    tags: ["下ごしらえ", "時短"], createdAt: ago(11 * HOUR), likes: ["u_me", "u_nakamura", "u_ogawa", "u_hayashi"] });
+
+  post({ id: "p9", type: "question", authorId: "u_nakamura", categoryId: "design",
+    title: "授業スライドが「見にくい」と言われます。何から直すべきでしょうか",
+    body: "生徒からのアンケートで、スライドが見にくいという意見が複数ありました。\n情報を減らせとよく言われますが、必要な内容なので減らせません。他に効く手はありますか。",
+    tags: ["スライド", "可読性"], createdAt: ago(20 * HOUR), likes: [] });
+
+  post({ id: "p10", type: "article", authorId: "u_ogawa", categoryId: "agri",
+    title: "プランターのミニトマトが甘くならない、たった一つの理由",
+    body: "毎年この時期に同じ相談を受けます。答えはほぼ例外なく「水のやりすぎ」です。\n\nトマトはもともと乾いた土地の植物で、水が足りないと感じたときに果実へ糖を集めます。毎日たっぷり水をやると、株は安心して実を水で膨らませ、味は薄くなります。\n\n実がつき始めたら、葉が昼にわずかにしおれるくらいまで待ってから、鉢底から流れ出るまで一気にやる。これだけで味が変わります。\n\n怖いのは、しおれを見て慌ててまた毎日やってしまうことです。夕方に葉が戻っていれば、その株は元気です。",
+    tags: ["家庭菜園", "トマト"], createdAt: ago(2 * DAY), likes: ["u_ishida", "u_me"] });
+
+  post({ id: "p11", type: "question", authorId: "u_ishida", categoryId: "it",
+    title: "レシピサイトを自分で作りたいのですが、何から手をつければいいですか",
+    body: "今はSNSにレシピを投稿していますが、流れて消えてしまうので自分のサイトにまとめたいです。\nプログラミングの経験はゼロです。作るべきか、既存サービスを使うべきかから迷っています。",
+    tags: ["Web制作", "はじめて"], createdAt: ago(30 * HOUR), likes: ["u_me"] });
+
+  post({ id: "p12", type: "article", authorId: "u_hayashi", categoryId: "design",
+    title: "「なんかダサい」を言語化する4つの視点",
+    body: "デザインのレビューで一番困るのが「なんかダサい」です。言われた側は直しようがありません。私は次の4つに分解して確認します。\n\n**余白** — 要素同士の距離が、関係の強さと一致しているか。関係ないもの同士が近いと、それだけで散らかって見えます。\n\n**揃え** — 左端が3種類ある画面は、内容が良くても雑に見えます。\n\n**強弱** — 一番言いたいことが、一番大きいか。全部を目立たせると、何も目立ちません。\n\n**色数** — 意味を持たない色が混ざっていないか。色は最後に足す装飾ではなく、情報の分類です。\n\nこの4つを順に見ると、「なんかダサい」の8割は具体的な指摘に変わります。",
+    tags: ["UI", "言語化"], createdAt: ago(45 * MIN), likes: ["u_me", "u_nakamura", "u_tanaka", "u_ishida", "u_sato"] });
+
+  const R = [];
+  function reply(o) { R.push(Object.assign({ likes: [] }, o)); }
+
+  reply({ id: "r1", postId: "p1", authorId: "u_tanaka", createdAt: ago(3 * DAY - 4 * HOUR),
+    likes: ["u_me", "u_hayashi", "u_mori"],
+    body: "優先順位をつけるなら、上から順にこの4つです。ここまでやれば、個人開発として恥ずかしくない水準になります。\n\n1. パスワードを自分で保存しない\n可能なら Google ログインなどの外部認証に寄せてください。自前で持つ場合は必ず bcrypt などでハッシュ化し、平文やMD5は論外です。\n\n2. HTTPS を強制する\n今は無料で証明書が取れます。http でのアクセスは https に転送してください。\n\n3. ユーザーが入力した文字を、そのまま画面に出さない\nこれが一番やらかしが多いところです。< や > をエスケープしないと、他人のブラウザで任意のスクリプトが動きます。\n\n4. 秘密の値をソースコードに書かない\nAPIキーやDBのパスワードは環境変数へ。GitHubに一度上げると、消しても履歴に残ります。\n\n逆に、最初から凝ったWAFや多要素認証を入れる必要はありません。上の4つが抜けている状態でそこに手を出すのは、順番が逆です。" });
+
+  reply({ id: "r2", postId: "p1", authorId: "u_hayashi", createdAt: ago(2 * DAY),
+    likes: ["u_me"],
+    body: "設計側から一点だけ。退会導線を最初に作っておくと後が楽です。個人情報を預かる以上、消してほしいと言われたときに手作業になると、運用が一気に苦しくなります。" });
+
+  reply({ id: "r3", postId: "p3", authorId: "u_kimura", createdAt: ago(20 * HOUR),
+    likes: ["u_mori", "u_me"],
+    body: "結論から言うと、**今持っている分は売らず、新規の積立先だけ変える**のが無難です。\n\n理由は2つあります。\n\nまず、売却してもNISAの非課税枠はその年には戻りません(翌年以降に復活します)。急いで売ると、その年の枠を無駄に使うことになります。\n\nもうひとつ、信託報酬の差が年0.1%程度なら、乗り換えのために非課税枠を消費するデメリットのほうが大きくなることが多いです。\n\nただし、差が年0.3%以上あり、まだ積立期間が20年以上残っているなら、計算する価値はあります。金額を教えていただければ目安を出せます。" });
+
+  reply({ id: "r4", postId: "p4", authorId: "u_ishida", createdAt: ago(1 * DAY),
+    likes: ["u_tanaka"],
+    body: "料理のレシピと全く同じ話で驚きました。工程をまとめて短く書いたレシピは、玄人には親切で、初心者には解読不能になります。" });
+
+  reply({ id: "r5", postId: "p5", authorId: "u_ishida", createdAt: ago(6 * DAY - 3 * HOUR),
+    likes: ["u_me", "u_nakamura", "u_ogawa"],
+    body: "家庭のコンロでも十分いけます。足りないのは火力ではなく、順番です。\n\n**1. 焼く1時間前に冷蔵庫から出す**\n中心が冷たいままだと、外が焦げるまで中に火が入りません。厚い肉ほど効きます。\n\n**2. 表面の水分を完全に拭く**\n水が残っていると、フライパンの熱が「蒸発」に使われて、焼き色がつく温度まで上がりません。ここが一番効きます。\n\n**3. 焼くのは片面1〜2分ずつだけ**\n焼き色をつけるのが目的で、火を通す工程ではありません。\n\n**4. 火を止めてアルミホイルで包み、焼いた時間と同じだけ休ませる**\n余熱で中心まで入ります。切ったときに肉汁が流れ出るのも防げます。\n\n家庭のコンロで一番効くのは、意外にも2番です。キッチンペーパーで押さえるだけなので、次回ぜひ試してみてください。" });
+
+  reply({ id: "r6", postId: "p6", authorId: "u_mori", createdAt: ago(3 * DAY),
+    likes: ["u_kimura"],
+    body: "3番、まさに順番を間違えて痛い目に遭いました。これから独立する人は本当に気をつけてほしいです。" });
+
+  reply({ id: "r7", postId: "p7", authorId: "u_nakamura", createdAt: ago(6 * HOUR),
+    likes: ["u_hayashi", "u_me", "u_tanaka"],
+    body: "目的が統計なら、教科書の順番は無視してください。挫折の原因はだいたい「今やっていることが何の役に立つか分からない」ことです。\n\nおすすめの順番はこうです。\n\n**1. 中学の割合と比** — 統計で詰まる人の大半は、実はここが曖昧です。1日で終わります。\n\n**2. 高校の「データの分析」** — 平均・分散・標準偏差・相関。統計に直結し、しかも独立した単元なので、ここだけ切り出して読めます。\n\n**3. 確率** — 条件付き確率まで。ここまで来ると、統計の本の前半が読めるようになります。\n\n**4. 必要になったら微分積分** — 正規分布の中身を知りたくなってからで十分です。\n\n順番を守る必要があるのは3→4だけで、1と2は独立しています。まず2から入って、分からない言葉が出たら1に戻る、が一番挫折しにくいです。" });
+
+  reply({ id: "r8", postId: "p9", authorId: "u_hayashi", createdAt: ago(15 * HOUR),
+    likes: ["u_nakamura", "u_me"],
+    body: "情報量を減らさずに見やすくする方法は、ちゃんとあります。\n\n**1枚あたりの「見出しの数」を1つにする**\n情報は減らさず、スライドの枚数を増やしてください。1枚に見出しが3つあると、読み手はどこを見ればいいか分からなくなります。\n\n**行間を1.4〜1.5倍にする**\n文字を小さくしてでも行間を広げたほうが、結果的に読めます。\n\n**色は「本文の黒」「強調の1色」「補足のグレー」の3色だけ**\n赤と青と緑が同時に出てくると、どれが重要か伝わりません。\n\nこの3つは情報を1つも削らずにできるので、まずここからをおすすめします。" });
+
+  reply({ id: "r9", postId: "p11", authorId: "u_tanaka", createdAt: ago(24 * HOUR),
+    likes: ["u_ishida", "u_me"],
+    body: "経験ゼロなら、最初から作るのはおすすめしません。\n\nまず note や WordPress で30記事ためて、「本当に続くか」「どんな機能が欲しくなるか」を確かめてください。実際に困ってからのほうが、作るべきものが明確になります。\n\nそのうえで、既存サービスでは無理だと分かった時点で作れば、無駄がありません。私が見てきた個人開発の失敗は、ほぼ全部が「作ってから使い道を考えた」パターンです。" });
+
+  reply({ id: "r10", postId: "p11", authorId: "u_hayashi", createdAt: ago(22 * HOUR),
+    likes: ["u_ishida"],
+    body: "同意です。加えて、レシピは検索から入ってくる人が多いので、独自サイトにするなら検索対策が必須になります。そこまで含めて考えると、最初の1年は既存サービスのほうが読まれる可能性が高いです。" });
+
+  reply({ id: "r11", postId: "p12", authorId: "u_nakamura", createdAt: ago(30 * MIN),
+    likes: ["u_hayashi"],
+    body: "余白の話、授業スライドにそのまま使えました。関係ない項目が近くにあると散らかって見える、というのは考えたことがなかったです。" });
+
+  reply({ id: "r12", postId: "p2", authorId: "u_me", createdAt: ago(3 * HOUR),
+    likes: ["u_sato"],
+    body: "「強さが変わらない」より「悪くなっている」ほうが危険、という基準はとても分かりやすかったです。家族に共有します。" });
+
+  reply({ id: "r13", postId: "p10", authorId: "u_ishida", createdAt: ago(1 * DAY),
+    likes: ["u_ogawa"],
+    body: "毎年水をやりすぎていました。しおれても夕方に戻れば大丈夫、という目安が知りたかったことそのものです。" });
+
+  reply({ id: "r14", postId: "p8", authorId: "u_ogawa", createdAt: ago(9 * HOUR),
+    likes: ["u_ishida"],
+    body: "鍋底の茶色を戻す、は本当に大事ですね。あれを洗い流してしまう人が多い気がします。" });
+
+  const follows = [
+    { followerId: "u_me", followeeId: "u_tanaka" },
+    { followerId: "u_me", followeeId: "u_ishida" },
+    { followerId: "u_me", followeeId: "u_sato" },
+    { followerId: "u_mori", followeeId: "u_kimura" },
+    { followerId: "u_mori", followeeId: "u_tanaka" },
+    { followerId: "u_nakamura", followeeId: "u_hayashi" },
+    { followerId: "u_hayashi", followeeId: "u_nakamura" },
+    { followerId: "u_ishida", followeeId: "u_ogawa" },
+    { followerId: "u_ishida", followeeId: "u_tanaka" },
+    { followerId: "u_ogawa", followeeId: "u_ishida" },
+    { followerId: "u_tanaka", followeeId: "u_hayashi" },
+    { followerId: "u_sato", followeeId: "u_nakamura" },
+    { followerId: "u_kimura", followeeId: "u_tanaka" },
+    { followerId: "u_nakamura", followeeId: "u_sato" }
+  ];
+
+  const notifications = [
+    { id: uid(), userId: "u_me", type: "best", actorId: "u_me", postId: "p1", createdAt: ago(2 * DAY), read: true },
+    { id: uid(), userId: "u_me", type: "reply", actorId: "u_hayashi", postId: "p1", createdAt: ago(2 * DAY), read: true },
+    { id: uid(), userId: "u_me", type: "like", actorId: "u_mori", postId: "p5", createdAt: ago(5 * DAY), read: true },
+    { id: uid(), userId: "u_me", type: "follow", actorId: "u_mori", postId: null, createdAt: ago(4 * HOUR), read: false },
+    { id: uid(), userId: "u_me", type: "like", actorId: "u_hayashi", postId: "p1", createdAt: ago(2 * HOUR), read: false }
+  ];
+
+  return {
+    users, categories: CATEGORIES, posts: P, replies: R,
+    follows, notifications, currentUserId: "u_me"
+  };
 }
 
-function showTitle() {
-  running = false;
-  clearInterval(timerInt); clearTimeout(spawnTO);
-  removeCards();
-  byId('end-screen').style.display = 'none';
-  byId('start-screen').style.display = 'flex';
+/* ---------------------------------------------------------------
+   View — 描画層
+   --------------------------------------------------------------- */
+
+const state = {
+  route: { name: "home" },
+  homeTab: "all",          // all | following
+  homeCategory: null,
+  homeSort: "new",         // new | hot
+  expertField: null,
+  sheet: null,             // null | 'accounts'
+  toast: null,
+  compose: { type: "question", title: "", body: "", categoryId: "it", tags: "" },
+  replyDrafts: {}          // postId -> 入力中の本文
+};
+
+let toastTimer = null;
+function toast(msg) {
+  state.toast = msg;
+  renderLayer();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { state.toast = null; renderLayer(); }, 1900);
 }
 
-function removeCards() {
-  var cs = document.querySelectorAll('.animal-card');
-  for (var i = 0; i < cs.length; i++) cs[i].remove();
+function go(route) {
+  state.route = route;
+  window.scrollTo(0, 0);
+  render();
 }
 
-function tick() {
-  timeLeft--;
-  setText('timer', '' + timeLeft);
-  if (timeLeft <= 10) byId('timer').className = 'urgent';
-  level = Math.min(5, Math.floor((GAME_TIME - timeLeft) / 15) + 1);
-  setText('level-num', '' + level);
-  if (timeLeft <= 0) endGame();
+/* --- 小さな部品 --- */
+
+function avatarHtml(user, cls) {
+  return '<span class="avatar ' + (cls || "") + '">' + esc(user.emoji) + '</span>';
 }
 
-function endGame() {
-  running = false;
-  clearInterval(timerInt); clearTimeout(spawnTO);
-  beep(300, 0.4);
-  var isNew = score > bestScore;
-  if (isNew) { bestScore = score; try { localStorage.setItem('ab2', bestScore); } catch(e){} }
-  setText('end-score', '' + score);
-  setText('end-best',  isNew ? '🎊 新記録！' : 'ベスト: ' + bestScore);
-  setText('end-medal', score >= 300 ? '🥇' : score >= 150 ? '🥈' : score >= 50 ? '🥉' : '🎮');
-  setTimeout(function() { byId('end-screen').style.display = 'flex'; }, 500);
+function userLineHtml(user, ts) {
+  return '' +
+    '<div class="name-line">' +
+      '<span class="name">' + esc(user.name) + '</span>' +
+      (user.verified ? verifiedMark() : "") +
+      '<span class="handle">@' + esc(user.handle) + (ts ? " ・ " + timeAgo(ts) : "") + '</span>' +
+    '</div>';
 }
 
-// ── スポーン ──────────────────────────────────────
-function spawn() {
-  if (!running) return;
-  spawnCard();
-  var d = Math.max(400, 1200 - level * 140) + Math.random() * 300;
-  spawnTO = setTimeout(function() { if (running) spawn(); }, d);
+function kindBadge(post) {
+  if (post.type === "article") return '<span class="kind article">記事</span>';
+  if (post.bestReplyId) return '<span class="kind solved">解決済み</span>';
+  return '<span class="kind question">質問</span>';
 }
 
-function spawnCard() {
-  if (!running) return;
-  var sz = pickSize();
-  var emoji = ANIMALS[rnd(ANIMALS.length)];
-  var name  = NAMES[emoji] || '';
-  var bdr   = BORDERS[rnd(BORDERS.length)];
-  var dur   = Math.max(2.5, 6 - level * 0.5) + Math.random() * 2;
+function statLike(count, on, action, id) {
+  return '<button class="stat ' + (on ? "on" : "") + '" data-action="' + action + '" data-id="' + esc(id) + '">' +
+    (on ? ICON.heartFill : ICON.heart) + '<span>' + count + '</span></button>';
+}
 
-  var card = document.createElement('div');
-  card.className = 'animal-card';
-  card.style.width  = sz + 'px';
-  card.style.height = sz + 'px';
-  card.style.left   = (4 + Math.random() * 80) + '%';
-  card.style.border = '3px solid ' + bdr;
-  card.style.animationDuration = dur.toFixed(2) + 's';
+function postCardHtml(post) {
+  const author = Store.user(post.authorId);
+  const cat = Store.category(post.categoryId);
+  const replyCount = Store.repliesOf(post.id).length;
+  const liked = post.likes.indexOf(Store.data.currentUserId) >= 0;
 
-  var ee = document.createElement('div');
-  ee.className = 'animal-emoji';
-  ee.style.fontSize = Math.round(sz * 0.5) + 'px';
-  ee.textContent = emoji;
+  return '' +
+  '<article class="card tappable" data-action="open-post" data-id="' + esc(post.id) + '">' +
+    '<div class="post-head">' +
+      '<button class="avatar" data-action="open-profile" data-id="' + esc(author.id) + '">' + esc(author.emoji) + '</button>' +
+      '<div style="flex:1;min-width:0">' + userLineHtml(author, post.createdAt) + '</div>' +
+      kindBadge(post) +
+    '</div>' +
+    '<h2 class="post-title">' + esc(post.title) + '</h2>' +
+    '<p class="post-excerpt">' + esc(excerpt(post.body, 100)) + '</p>' +
+    '<div class="tags">' +
+      (cat ? '<span class="tag">' + esc(cat.emoji + " " + cat.name) + '</span>' : "") +
+      post.tags.map(t => '<span class="tag">#' + esc(t) + '</span>').join("") +
+    '</div>' +
+    '<div class="post-foot">' +
+      statLike(post.likes.length, liked, "like-post", post.id) +
+      '<span class="stat">' + ICON.chat + '<span>' + replyCount + '</span></span>' +
+      '<span class="stat" style="margin-left:auto">' +
+        (post.type === "question" ? "回答を見る" : "続きを読む") + '</span>' +
+    '</div>' +
+  '</article>';
+}
 
-  var ne = document.createElement('div');
-  ne.className = 'animal-name';
-  ne.textContent = name;
+/* --- 画面: ホーム --- */
 
-  card.appendChild(ee);
-  card.appendChild(ne);
-  card.dataset.pts   = sizeToPoints(sz);
-  card.dataset.emoji = emoji;
+function renderHome() {
+  const meId = Store.data.currentUserId;
+  const followingIds = Store.followingIds(meId);
+  let posts = Store.posts().slice();
 
-  card.addEventListener('pointerdown', tapCard);
-  card.addEventListener('animationend', function() {
-    if (card.parentNode) card.parentNode.removeChild(card);
+  if (state.homeTab === "following") {
+    posts = posts.filter(p => followingIds.indexOf(p.authorId) >= 0 || p.authorId === meId);
+  }
+  if (state.homeCategory) {
+    posts = posts.filter(p => p.categoryId === state.homeCategory);
+  }
+  if (state.homeSort === "hot") {
+    posts.sort((a, b) =>
+      (b.likes.length * 2 + Store.repliesOf(b.id).length * 3) -
+      (a.likes.length * 2 + Store.repliesOf(a.id).length * 3));
+  } else {
+    posts.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  const cats = Store.categories();
+  let html = '' +
+  '<div class="segment">' +
+    '<button data-action="home-tab" data-value="all" class="' + (state.homeTab === "all" ? "active" : "") + '">すべて</button>' +
+    '<button data-action="home-tab" data-value="following" class="' + (state.homeTab === "following" ? "active" : "") + '">フォロー中</button>' +
+  '</div>' +
+  '<div class="chip-row">' +
+    '<button class="chip ' + (state.homeCategory === null ? "active" : "") + '" data-action="home-category" data-value="">すべての分野</button>' +
+    cats.map(c => '<button class="chip ' + (state.homeCategory === c.id ? "active" : "") + '" data-action="home-category" data-value="' + c.id + '">' + esc(c.emoji + " " + c.name) + '</button>').join("") +
+  '</div>' +
+  '<div class="sortbar">' +
+    '<span class="lbl">' + posts.length + '件</span>' +
+    '<button class="sortbtn ' + (state.homeSort === "new" ? "active" : "") + '" data-action="home-sort" data-value="new">新着順</button>' +
+    '<button class="sortbtn ' + (state.homeSort === "hot" ? "active" : "") + '" data-action="home-sort" data-value="hot">人気順</button>' +
+  '</div>';
+
+  if (!posts.length) {
+    html += '<div class="empty"><span class="big">🗂️</span>' +
+      (state.homeTab === "following"
+        ? "フォロー中の専門家の投稿はまだありません。<br>「専門家」タブから気になる人をフォローしてみてください。"
+        : "この分野の投稿はまだありません。") +
+      '</div>';
+  } else {
+    html += '<div class="list">' + posts.map(postCardHtml).join("") + '</div>';
+  }
+  return html;
+}
+
+/* --- 画面: 投稿詳細 --- */
+
+function renderPost() {
+  const post = Store.post(state.route.id);
+  if (!post) return '<div class="empty">投稿が見つかりませんでした。</div>';
+
+  const author = Store.user(post.authorId);
+  const cat = Store.category(post.categoryId);
+  const meId = Store.data.currentUserId;
+  const liked = post.likes.indexOf(meId) >= 0;
+  const isOwner = post.authorId === meId;
+  const isQuestion = post.type === "question";
+
+  let replies = Store.repliesOf(post.id);
+  // ベストアンサーは常に先頭に出す
+  replies.sort((a, b) => {
+    const ab = post.bestReplyId === a.id ? 1 : 0;
+    const bb = post.bestReplyId === b.id ? 1 : 0;
+    if (ab !== bb) return bb - ab;
+    return a.createdAt - b.createdAt;
   });
 
-  byId('game-container').appendChild(card);
-}
+  let html = '<div class="list">' +
+  '<article class="card">' +
+    '<div class="post-head">' +
+      '<button class="avatar" data-action="open-profile" data-id="' + esc(author.id) + '">' + esc(author.emoji) + '</button>' +
+      '<div style="flex:1;min-width:0">' + userLineHtml(author, post.createdAt) + '</div>' +
+      kindBadge(post) +
+    '</div>' +
+    '<h1 class="post-title" style="font-size:19px">' + esc(post.title) + '</h1>' +
+    '<div class="post-body">' + escMultiline(post.body) + '</div>' +
+    '<div class="tags">' +
+      (cat ? '<span class="tag">' + esc(cat.emoji + " " + cat.name) + '</span>' : "") +
+      post.tags.map(t => '<span class="tag">#' + esc(t) + '</span>').join("") +
+    '</div>' +
+    '<div class="post-foot">' +
+      statLike(post.likes.length, liked, "like-post", post.id) +
+      '<span class="stat">' + ICON.chat + '<span>' + replies.length + '</span></span>' +
+    '</div>' +
+  '</article>';
 
-function pickSize() {
-  var r = Math.random();
-  return r < 0.15 ? 95 + rnd(20) : r < 0.55 ? 65 + rnd(20) : 46 + rnd(14);
-}
-function sizeToPoints(s) { return s >= 95 ? 1 : s >= 65 ? 3 : 5; }
+  html += '<div class="section-title" style="padding-left:2px">' +
+    (isQuestion ? "回答 " + replies.length + "件" : "コメント " + replies.length + "件") + '</div>';
 
-// ── タップ ────────────────────────────────────────
-function tapCard(e) {
-  e.stopPropagation();
-  if (!running) return;
-  var card = this;
-  card.removeEventListener('pointerdown', tapCard);
-  var rect = card.getBoundingClientRect();
-  var cx = rect.left + rect.width / 2;
-  var cy = rect.top  + rect.height / 2;
-  if (card.parentNode) card.parentNode.removeChild(card);
-
-  combo++;
-  clearTimeout(comboTimer);
-  comboTimer = setTimeout(function() { combo = 0; hideCombo(); }, 1200);
-
-  var mult = combo >= 5 ? 3 : combo >= 3 ? 2 : 1;
-  var pts  = parseInt(card.dataset.pts) * mult;
-  score += pts;
-  setText('score', '' + score);
-
-  showStars(cx, cy);
-  showPts(cx, cy, pts, combo);
-  beep(440 + combo * 40, 0.18);
-
-  if (combo >= 3) {
-    var ct = byId('combo-text');
-    ct.textContent = combo >= 10 ? '🔥' + combo + 'コンボ！！' : combo >= 5 ? '✨' + combo + 'コンボ！' : combo + 'コンボ';
-    ct.style.display = 'block';
-    if (combo % 3 === 0) { beep(523,0.1); beep(659,0.1); beep(784,0.1); }
+  if (!replies.length) {
+    html += '<div class="empty" style="padding:26px 16px"><span class="big">💬</span>' +
+      (isQuestion ? "まだ回答がありません。最初の回答者になりませんか？" : "まだコメントがありません。") + '</div>';
+  } else {
+    html += replies.map(r => replyHtml(r, post, isOwner, isQuestion)).join("");
   }
+
+  const draft = state.replyDrafts[post.id] || "";
+  html += '' +
+  '<div class="card">' +
+    '<div style="font-size:13px;font-weight:800;margin-bottom:9px">' +
+      (isQuestion ? "この質問に回答する" : "コメントする") + '</div>' +
+    '<textarea id="reply-input" data-field="reply" data-id="' + esc(post.id) + '" ' +
+      'style="width:100%;min-height:110px;padding:11px 13px;border-radius:11px;border:1px solid var(--border);font-size:15px;line-height:1.7;outline:none;resize:vertical" ' +
+      'placeholder="' + (isQuestion ? "あなたの専門から見た答えを書いてください" : "感想や補足をどうぞ") + '">' + esc(draft) + '</textarea>' +
+    '<div style="display:flex;justify-content:flex-end;margin-top:10px">' +
+      '<button class="btn" data-action="submit-reply" data-id="' + esc(post.id) + '">' +
+        (isQuestion ? "回答を投稿" : "コメントする") + '</button>' +
+    '</div>' +
+  '</div>';
+
+  html += '</div>';
+  return html;
 }
 
-function hideCombo() { byId('combo-text').style.display = 'none'; }
+function replyHtml(reply, post, isOwner, isQuestion) {
+  const author = Store.user(reply.authorId);
+  const liked = reply.likes.indexOf(Store.data.currentUserId) >= 0;
+  const isBest = post.bestReplyId === reply.id;
 
-function showStars(cx, cy) {
-  var cont = byId('game-container');
-  for (var i = 0; i < 6; i++) {
-    var el = document.createElement('div');
-    el.className = 'pop-star';
-    el.textContent = STARS[rnd(STARS.length)];
-    var a = Math.PI * 2 * i / 6 + Math.random() * 0.4;
-    var d = 35 + Math.random() * 45;
-    el.style.left = (cx - 10) + 'px';
-    el.style.top  = (cy - 10) + 'px';
-    el.style.setProperty('--dx', (Math.cos(a) * d) + 'px');
-    el.style.setProperty('--dy', (Math.sin(a) * d - 15) + 'px');
-    cont.appendChild(el);
-    (function(e) { e.addEventListener('animationend', function() { if(e.parentNode) e.parentNode.removeChild(e); }); })(el);
+  let actions = statLike(reply.likes.length, liked, "like-reply", reply.id);
+  if (isQuestion && isOwner) {
+    actions += '<button class="btn ghost sm" style="margin-left:auto" ' +
+      'data-action="select-best" data-post="' + esc(post.id) + '" data-id="' + esc(reply.id) + '">' +
+      (isBest ? "選定を取り消す" : "ベストアンサーにする") + '</button>';
   }
+
+  return '' +
+  '<div class="reply' + (isBest ? " best" : "") + '">' +
+    (isBest ? '<div class="best-flag">' + ICON.award + 'ベストアンサー</div>' : "") +
+    '<div style="display:flex;align-items:center;gap:9px">' +
+      '<button class="avatar" style="width:34px;height:34px;font-size:18px" data-action="open-profile" data-id="' + esc(author.id) + '">' + esc(author.emoji) + '</button>' +
+      '<div style="flex:1;min-width:0">' + userLineHtml(author, reply.createdAt) + '</div>' +
+    '</div>' +
+    '<div class="reply-body">' + escMultiline(reply.body) + '</div>' +
+    '<div class="reply-foot">' + actions + '</div>' +
+  '</div>';
 }
 
-function showPts(cx, cy, pts, c) {
-  var el = document.createElement('div');
-  el.className = 'score-pop';
-  el.textContent = '+' + pts + (c >= 5 ? ' x3🔥' : c >= 3 ? ' x2✨' : '');
-  el.style.left = (cx - 20) + 'px';
-  el.style.top  = (cy - 32) + 'px';
-  if (c >= 3) el.style.color = c >= 5 ? '#FF0000' : '#FF9F00';
-  byId('game-container').appendChild(el);
-  el.addEventListener('animationend', function() { if(el.parentNode) el.parentNode.removeChild(el); });
+/* --- 画面: 投稿作成 --- */
+
+function renderCompose() {
+  const c = state.compose;
+  const isQ = c.type === "question";
+
+  return '' +
+  '<div class="typeswitch">' +
+    '<button class="typecard ' + (isQ ? "active" : "") + '" data-action="compose-type" data-value="question">' +
+      '<div class="t">❓ 質問する</div>' +
+      '<div class="d">分からないことを聞く。専門家が回答し、ベストアンサーを選べます。</div>' +
+    '</button>' +
+    '<button class="typecard ' + (!isQ ? "active" : "") + '" data-action="compose-type" data-value="article">' +
+      '<div class="t">📝 記事を書く</div>' +
+      '<div class="d">自分の専門知識をまとめて共有する。コメントがつきます。</div>' +
+    '</button>' +
+  '</div>' +
+
+  '<div class="field">' +
+    '<label>タイトル</label>' +
+    '<input type="text" data-field="title" value="' + esc(c.title) + '" ' +
+      'placeholder="' + (isQ ? "例：家庭のコンロでステーキを上手に焼くには？" : "例：玉ねぎを飴色にする時間を半分にする方法") + '">' +
+    '<div class="hint">' + (isQ ? "結論ではなく、聞きたいことを一文で書くと回答が集まりやすくなります。" : "読み手が得られるものが分かる見出しにしましょう。") + '</div>' +
+  '</div>' +
+
+  '<div class="field">' +
+    '<label>' + (isQ ? "質問の内容" : "本文") + '</label>' +
+    '<textarea data-field="body" placeholder="' +
+      (isQ ? "状況・試したこと・知りたいことを書くと、精度の高い回答がつきます。" : "経験にもとづく具体的な内容ほど価値があります。") +
+      '">' + esc(c.body) + '</textarea>' +
+  '</div>' +
+
+  '<div class="field">' +
+    '<label>分野</label>' +
+    '<select data-field="categoryId">' +
+      Store.categories().map(cat =>
+        '<option value="' + cat.id + '"' + (cat.id === c.categoryId ? " selected" : "") + '>' +
+        esc(cat.emoji + " " + cat.name) + '</option>').join("") +
+    '</select>' +
+  '</div>' +
+
+  '<div class="field">' +
+    '<label>タグ（最大5つ）</label>' +
+    '<input type="text" data-field="tags" value="' + esc(c.tags) + '" placeholder="スペースまたはカンマ区切り　例：セキュリティ 個人開発">' +
+  '</div>' +
+
+  '<div class="field">' +
+    '<button class="btn block" data-action="submit-post">' + (isQ ? "質問を投稿する" : "記事を公開する") + '</button>' +
+  '</div>';
 }
 
-// ── ユーティリティ ────────────────────────────────
-function byId(id) { return document.getElementById(id); }
-function setText(id, t) { byId(id).textContent = t; }
-function rnd(n) { return Math.floor(Math.random() * n); }
+/* --- 画面: 専門家一覧 --- */
 
-// ── ボタン設定 ────────────────────────────────────
-byId('btn-start').onclick = startGame;
-byId('btn-retry').onclick = startGame;
-byId('btn-home').onclick  = showTitle;
+function renderExperts() {
+  const meId = Store.data.currentUserId;
+  let users = Store.users().filter(u => u.id !== meId);
+  if (state.expertField) users = users.filter(u => u.fields.indexOf(state.expertField) >= 0);
+
+  // 認定済みを上に、その中でフォロワー数の多い順
+  users.sort((a, b) => {
+    if (a.verified !== b.verified) return a.verified ? -1 : 1;
+    return Store.followerCount(b.id) - Store.followerCount(a.id);
+  });
+
+  const cats = Store.categories();
+  let html = '' +
+  '<div class="chip-row" style="padding-top:12px">' +
+    '<button class="chip ' + (state.expertField === null ? "active" : "") + '" data-action="expert-field" data-value="">すべて</button>' +
+    cats.map(c => '<button class="chip ' + (state.expertField === c.id ? "active" : "") + '" data-action="expert-field" data-value="' + c.id + '">' + esc(c.emoji + " " + c.name) + '</button>').join("") +
+  '</div>';
+
+  if (!users.length) {
+    html += '<div class="empty"><span class="big">🔍</span>この分野の専門家はまだ登録されていません。</div>';
+    return html;
+  }
+
+  html += '<div class="list">' + users.map(u => {
+    const following = Store.isFollowing(meId, u.id);
+    const fieldNames = u.fields.map(f => {
+      const c = Store.category(f);
+      return c ? '<span class="fieldtag">' + esc(c.emoji + " " + c.name) + '</span>' : "";
+    }).join("");
+
+    return '' +
+    '<div class="card expert-card">' +
+      '<button class="avatar" data-action="open-profile" data-id="' + esc(u.id) + '">' + esc(u.emoji) + '</button>' +
+      '<div class="col" data-action="open-profile" data-id="' + esc(u.id) + '">' +
+        userLineHtml(u, null) +
+        '<div class="expert-bio">' + esc(u.bio) + '</div>' +
+        (fieldNames ? '<div class="fields">' + fieldNames + '</div>' : "") +
+        '<div class="meta" style="margin-top:7px">フォロワー ' + Store.followerCount(u.id) +
+          ' ・ 投稿 ' + Store.postsBy(u.id).length + '</div>' +
+      '</div>' +
+      '<button class="btn sm ' + (following ? "ghost" : "") + '" data-action="follow" data-id="' + esc(u.id) + '">' +
+        (following ? "フォロー中" : "フォロー") + '</button>' +
+    '</div>';
+  }).join("") + '</div>';
+
+  return html;
+}
+
+/* --- 画面: プロフィール --- */
+
+function renderProfile() {
+  const user = Store.user(state.route.id);
+  if (!user) return '<div class="empty">ユーザーが見つかりませんでした。</div>';
+
+  const meId = Store.data.currentUserId;
+  const isMe = user.id === meId;
+  const following = Store.isFollowing(meId, user.id);
+  const posts = Store.postsBy(user.id);
+
+  const fieldNames = user.fields.map(f => {
+    const c = Store.category(f);
+    return c ? '<span class="fieldtag">' + esc(c.emoji + " " + c.name) + '</span>' : "";
+  }).join("");
+
+  let html = '' +
+  '<div class="profile-head">' +
+    '<div class="profile-top">' +
+      avatarHtml(user, "lg") +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="profile-name">' + esc(user.name) + (user.verified ? verifiedMark() : "") + '</div>' +
+        '<div class="handle">@' + esc(user.handle) + '</div>' +
+      '</div>' +
+      (isMe
+        ? '<button class="btn ghost sm" data-action="open-accounts">アカウント切替</button>'
+        : '<button class="btn sm ' + (following ? "ghost" : "") + '" data-action="follow" data-id="' + esc(user.id) + '">' +
+            (following ? "フォロー中" : "フォロー") + '</button>') +
+    '</div>' +
+    '<div style="margin-top:12px;font-size:14px;line-height:1.75">' + escMultiline(user.bio) + '</div>' +
+    (fieldNames ? '<div class="fields">' + fieldNames + '</div>' : "") +
+    (user.verified && user.verifiedNote
+      ? '<div class="verified-note"><b>専門家認定</b>　' + esc(user.verifiedNote) + '</div>'
+      : (isMe ? '<div class="verified-note" style="background:var(--surface-2);border-color:var(--border);color:var(--muted)">まだ専門家認定を受けていません。得意分野の記事や回答を投稿すると申請できるようになります。</div>' : "")) +
+    '<div class="counts">' +
+      '<div><b>' + Store.followingCount(user.id) + '</b> <span>フォロー中</span></div>' +
+      '<div><b>' + Store.followerCount(user.id) + '</b> <span>フォロワー</span></div>' +
+      '<div><b>' + posts.length + '</b> <span>投稿</span></div>' +
+    '</div>' +
+  '</div>';
+
+  html += '<div class="section-title">' + (isMe ? "あなたの投稿" : "投稿") + '</div>';
+  if (!posts.length) {
+    html += '<div class="empty" style="padding:30px 16px"><span class="big">✍️</span>まだ投稿がありません。</div>';
+  } else {
+    html += '<div class="list" style="padding-top:2px">' + posts.map(postCardHtml).join("") + '</div>';
+  }
+  return html;
+}
+
+/* --- 画面: 通知 --- */
+
+const NOTI_TEXT = {
+  follow: name => '<b>' + name + '</b> さんがあなたをフォローしました',
+  like:   (name, title) => '<b>' + name + '</b> さんが「' + title + '」にいいねしました',
+  reply:  (name, title) => '<b>' + name + '</b> さんが「' + title + '」に回答・コメントしました',
+  best:   (name, title) => 'あなたの回答が「' + title + '」のベストアンサーに選ばれました'
+};
+
+function renderNotifications() {
+  const list = Store.myNotifications();
+  if (!list.length) {
+    return '<div class="empty"><span class="big">🔔</span>通知はまだありません。<br>専門家をフォローしたり投稿すると、ここに届きます。</div>';
+  }
+
+  return list.map(n => {
+    const actor = Store.user(n.actorId);
+    const post = n.postId ? Store.post(n.postId) : null;
+    const name = esc(actor ? actor.name : "退会したユーザー");
+    const title = esc(excerpt(post ? post.title : "", 24));
+    const fn = NOTI_TEXT[n.type];
+    const text = fn ? fn(name, title) : "";
+    const target = post
+      ? 'data-action="open-post" data-id="' + esc(post.id) + '"'
+      : (actor ? 'data-action="open-profile" data-id="' + esc(actor.id) + '"' : "");
+
+    return '<button class="noti' + (n.read ? "" : " unread") + '" ' + target + '>' +
+      (actor ? avatarHtml(actor) : '<span class="avatar">🔔</span>') +
+      '<div class="noti-text">' + text +
+        '<div class="meta">' + timeAgo(n.createdAt) + '</div>' +
+      '</div>' +
+      (n.read ? "" : '<span class="noti-dot"></span>') +
+    '</button>';
+  }).join("");
+}
+
+/* --- トップバー / タブバー / オーバーレイ --- */
+
+function renderTopbar() {
+  const r = state.route;
+  const me = Store.me();
+  const showBack = (r.name === "post" || (r.name === "profile" && r.id !== me.id));
+
+  const titles = {
+    home: "", post: "投稿", compose: "新しい投稿",
+    experts: "専門家をさがす", notifications: "通知", profile: "プロフィール"
+  };
+
+  let left;
+  if (showBack) {
+    left = '<button class="iconbtn" data-action="back" aria-label="戻る">' + ICON.back + '</button>' +
+           '<div class="topbar-title">' + esc(titles[r.name] || "") + '</div>';
+  } else if (r.name === "home") {
+    left = '<div class="brand"><span class="brand-mark">K</span>Knowl</div><div class="spacer"></div>';
+  } else {
+    left = '<div class="topbar-title">' + esc(titles[r.name] || "") + '</div>';
+  }
+
+  return left +
+    '<button class="account-btn" data-action="open-accounts">' +
+      '<span class="avatar">' + esc(me.emoji) + '</span>' +
+      esc(me.name) + ' ' + ICON.switchIcon +
+    '</button>';
+}
+
+function renderTabbar() {
+  const unread = Store.unreadCount();
+  const r = state.route.name;
+  const me = Store.me();
+  const items = [
+    { key: "home",          label: "ホーム",   icon: ICON.home,  route: { name: "home" } },
+    { key: "experts",       label: "専門家",   icon: ICON.users, route: { name: "experts" } },
+    { key: "compose",       label: "投稿",     icon: null,       route: { name: "compose" } },
+    { key: "notifications", label: "通知",     icon: ICON.bell,  route: { name: "notifications" } },
+    { key: "profile",       label: "マイページ", icon: ICON.user,  route: { name: "profile", id: me.id } }
+  ];
+
+  return items.map(it => {
+    const active = (it.key === "profile")
+      ? (r === "profile" && state.route.id === me.id)
+      : r === it.key;
+    const inner = it.key === "compose"
+      ? '<span class="compose-dot">' + ICON.plus + '</span>'
+      : it.icon;
+    const badge = (it.key === "notifications" && unread)
+      ? '<span class="tab-badge">' + (unread > 9 ? "9+" : unread) + '</span>' : "";
+    return '<button class="tab ' + (active ? "active" : "") + (it.key === "compose" ? " tab-compose" : "") + '" ' +
+      'data-action="nav" data-route="' + it.key + '">' + inner + badge +
+      '<span>' + it.label + '</span></button>';
+  }).join("");
+}
+
+function renderLayer() {
+  const layer = document.getElementById("layer");
+  let html = "";
+
+  if (state.sheet === "accounts") {
+    const meId = Store.data.currentUserId;
+    html += '<div class="overlay" data-action="close-sheet">' +
+      '<div class="sheet" data-stop="1">' +
+        '<div class="sheet-grip"></div>' +
+        '<div class="sheet-title">アカウントを切り替える</div>' +
+        '<div class="sheet-sub">プロトタイプではログインの代わりに、誰として見るかをここで切り替えます。' +
+          'フォローや通知の動きは、切り替えて試すと分かりやすくなります。</div>' +
+        Store.users().map(u =>
+          '<button class="sheet-item ' + (u.id === meId ? "current" : "") + '" data-action="switch-user" data-id="' + esc(u.id) + '">' +
+            avatarHtml(u) +
+            '<div style="flex:1;min-width:0">' + userLineHtml(u, null) +
+              '<div class="meta">' + esc(excerpt(u.bio, 34)) + '</div></div>' +
+            (u.id === meId ? '<span class="verified-badge" style="background:var(--primary)">' + ICON.check + '</span>' : "") +
+          '</button>').join("") +
+        '<div style="padding:14px 18px 0;border-top:1px solid var(--border);margin-top:10px">' +
+          '<button class="btn ghost block" data-action="reset-data">デモデータを初期状態に戻す</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  if (state.toast) {
+    html += '<div class="toast">' + esc(state.toast) + '</div>';
+  }
+  layer.innerHTML = html;
+}
+
+function render() {
+  document.getElementById("topbar").innerHTML = renderTopbar();
+  document.getElementById("tabbar").innerHTML = renderTabbar();
+
+  let body = "";
+  switch (state.route.name) {
+    case "home":          body = renderHome(); break;
+    case "post":          body = renderPost(); break;
+    case "compose":       body = renderCompose(); break;
+    case "experts":       body = renderExperts(); break;
+    case "profile":       body = renderProfile(); break;
+    case "notifications": body = renderNotifications(); break;
+    default:              body = renderHome();
+  }
+  document.getElementById("view").innerHTML = body;
+  renderLayer();
+}
+
+/* ---------------------------------------------------------------
+   イベント（ルート要素での委譲でまとめて受ける）
+   --------------------------------------------------------------- */
+
+function markNotificationsRead() {
+  const meId = Store.data.currentUserId;
+  let changed = false;
+  Store.notifications().forEach(n => {
+    if (n.userId === meId && !n.read) { n.read = true; changed = true; }
+  });
+  if (changed) Store.save();
+}
+
+document.addEventListener("click", function (ev) {
+  const el = ev.target.closest("[data-action]");
+  if (!el) return;
+
+  // シート内のクリックが背景の close-sheet まで届かないようにする
+  if (el.dataset.action === "close-sheet" && ev.target.closest("[data-stop]")) return;
+
+  const action = el.dataset.action;
+  const id = el.dataset.id;
+
+  switch (action) {
+    case "nav": {
+      const key = el.dataset.route;
+      if (key === "notifications") {
+        // 未読は開いた瞬間に既読化するが、この描画では未読の色を残す
+        go({ name: "notifications" });
+        setTimeout(() => { markNotificationsRead(); render(); }, 900);
+      } else if (key === "profile") {
+        go({ name: "profile", id: Store.data.currentUserId });
+      } else {
+        go({ name: key });
+      }
+      break;
+    }
+    case "back":
+      go({ name: "home" });
+      break;
+    case "open-post":
+      ev.stopPropagation();
+      go({ name: "post", id: id });
+      break;
+    case "open-profile":
+      ev.stopPropagation();
+      go({ name: "profile", id: id });
+      break;
+    case "home-tab":
+      state.homeTab = el.dataset.value;
+      render();
+      break;
+    case "home-category":
+      state.homeCategory = el.dataset.value || null;
+      render();
+      break;
+    case "home-sort":
+      state.homeSort = el.dataset.value;
+      render();
+      break;
+    case "expert-field":
+      state.expertField = el.dataset.value || null;
+      render();
+      break;
+    case "like-post":
+      ev.stopPropagation();
+      Actions.toggleLikePost(id);
+      render();
+      break;
+    case "like-reply":
+      ev.stopPropagation();
+      Actions.toggleLikeReply(id);
+      render();
+      break;
+    case "follow": {
+      ev.stopPropagation();
+      const wasFollowing = Store.isFollowing(Store.data.currentUserId, id);
+      Actions.toggleFollow(id);
+      const u = Store.user(id);
+      toast(wasFollowing ? "フォローを解除しました" : u.name + " さんをフォローしました");
+      render();
+      break;
+    }
+    case "compose-type":
+      state.compose.type = el.dataset.value;
+      render();
+      break;
+    case "submit-post": {
+      const c = state.compose;
+      if (!c.title.trim()) { toast("タイトルを入力してください"); return; }
+      if (!c.body.trim())  { toast(c.type === "question" ? "質問の内容を入力してください" : "本文を入力してください"); return; }
+      const post = Actions.createPost(c);
+      state.compose = { type: c.type, title: "", body: "", categoryId: c.categoryId, tags: "" };
+      toast(post.type === "question" ? "質問を投稿しました" : "記事を公開しました");
+      go({ name: "post", id: post.id });
+      break;
+    }
+    case "submit-reply": {
+      const text = state.replyDrafts[id] || "";
+      if (!text.trim()) { toast("本文を入力してください"); return; }
+      Actions.addReply(id, text);
+      delete state.replyDrafts[id];
+      const post = Store.post(id);
+      toast(post.type === "question" ? "回答を投稿しました" : "コメントしました");
+      render();
+      break;
+    }
+    case "select-best":
+      Actions.selectBest(el.dataset.post, id);
+      toast(Store.post(el.dataset.post).bestReplyId ? "ベストアンサーに選びました" : "選定を取り消しました");
+      render();
+      break;
+    case "open-accounts":
+      state.sheet = "accounts";
+      renderLayer();
+      break;
+    case "close-sheet":
+      state.sheet = null;
+      renderLayer();
+      break;
+    case "switch-user": {
+      Actions.switchUser(id);
+      state.sheet = null;
+      const u = Store.me();
+      toast(u.name + " として表示中");
+      if (state.route.name === "profile") state.route = { name: "profile", id: u.id };
+      render();
+      break;
+    }
+    case "reset-data":
+      Store.reset();
+      state.sheet = null;
+      state.route = { name: "home" };
+      state.homeTab = "all";
+      state.homeCategory = null;
+      state.replyDrafts = {};
+      state.compose = { type: "question", title: "", body: "", categoryId: "it", tags: "" };
+      toast("デモデータを初期状態に戻しました");
+      render();
+      break;
+  }
+});
+
+// フォーム入力を state に控えておく（再描画で消えないようにするため）
+document.addEventListener("input", function (ev) {
+  const el = ev.target.closest("[data-field]");
+  if (!el) return;
+  const field = el.dataset.field;
+  if (field === "reply") {
+    state.replyDrafts[el.dataset.id] = el.value;
+  } else if (Object.prototype.hasOwnProperty.call(state.compose, field)) {
+    state.compose[field] = el.value;
+  }
+});
+document.addEventListener("change", function (ev) {
+  const el = ev.target.closest("[data-field]");
+  if (!el || el.tagName !== "SELECT") return;
+  if (Object.prototype.hasOwnProperty.call(state.compose, el.dataset.field)) {
+    state.compose[el.dataset.field] = el.value;
+  }
+});
+
+/* --- 起動 --- */
+Store.load();
+render();
 </script>
 </body>
 </html>
